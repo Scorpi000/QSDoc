@@ -1,0 +1,851 @@
+快速入门
+========
+
+本页提供了一个简单的 QuantStudio 介绍，并假定已经安装好了 QuantStudio。如果没有，请跳转到 :ref:`安装` 章节。
+
+.. _示例数据:
+
+.. attention::
+
+    本章节的应用需要一些基本的数据, 假定本地因子库 HDF5DB 和风险库 HDF5FRDB 中有相应的数据, 这里提供了一些示例数据, 可以从 "链接：https://pan.baidu.com/s/1QphOTTyHIBPkEbJX6MXCRA 密码：3oap" 或者 "https://share.weiyun.com/5Q7rxDQ" 下载因子数据后解压到 "C:\\HDF5Data" 文件夹中, 从 "链接：https://pan.baidu.com/s/1k5z_DA7rL9Fl20xBsCR9ig 密码：7ga0" 或者 "https://share.weiyun.com/5QOfWk6" 下载风险数据后解压到 "C:\\RiskData" 文件夹中.
+
+在所有开始之前, 首先需要导入 QuantStudio, 一般导入代码如下::
+    
+    >>>import QuantStudio.api as QS
+
+QuantStudio 中提供了很多的功能对象, 每个对象都继承自 __QS_Object__, QuantStudio 对象有一些共同的方法, 这里以因子库对象 TushareDB 为例说明, 首先实例化一个 TushareDB 对象::
+
+    >>>TSDB = QS.FactorDB.TushareDB()
+
+QuantStudio 对象可能包含若干个参数来控制其行为, 如果想要查询 QuantStudio 对象有哪些参数, 可以查看其 ArgNames 属性::
+
+    >>>print(TSDB.ArgNames)
+    ['Token']
+
+查看对象的参数值, 可以通过其 Args 属性, 如果没有修改过参数值, 那么给出的是默认值或初始化时指定的值::
+
+    >>>print(TSDB.Args)
+    {'Token': 'iamatoken'}
+
+读取某个参数的取值可以直接以参数名进行索引::
+
+    >>>print(TSDB["Token"])
+    iamatoken
+
+同样可以对参数值进行修改::
+
+    >>>TSDB["Token"] = "123456"
+    >>>print(TSDB["Token"])
+    123456
+
+在示例化对象时也可以给出参数的初始值, 有两种方式, 一种是在创建对象时指定 sys_args 参数::
+    
+    >>>TSDB = QS.FactorDB.TushareDB(sys_args={"Token":"123456"})
+    >>>print(TSDB["Token"])
+    123456
+
+或者在创建对象时指定配置文件的地址::
+
+    >>>TSDB = QS.FactorDB.TushareDB(config_file="C:\\TushareDBConfig.json")
+    >>>print(TSDB["Token"])
+    123456
+
+配置文件是一个 json 格式的文件(编码格式为 utf-8, 扩展名为 json), 以键值对的形式给出各个参数的取值, 比如上面那个配置文件的内容为::
+
+    {
+        "Token": "123456"
+    }
+
+QuantStudio 对象的参数说明可以参看相应的 API 参考.
+
+
+因子数据读取
+------------
+
+QuantStudio 中的数据来自于各个因子库, 这里以基于 tushare 模块的 TushareDB 为例, 所有的因子库都在子模块 FactorDB 中, 首先创建因子库对象, 并链接(使用 TushareDB 需要注册并申请一个 token 作为参数传入)::
+
+    >>>TSDB = QS.FactorDB.TushareDB(sys_args={"Token":"123456"})
+    >>>TSDB.connect()
+
+每个因子库中都包含若干个因子表, 可以查看因子库对象的 TableNames 属性获取特定因子库包含的表名列表::
+
+    >>>print(TSDB.TableNames)
+    ['交易日历', 'A股基本资料', 'A股日线行情', 'A股复权因子', 'A股指数成分和权重', '期货合约信息表', '期货日线行情', '每日结算参数']
+
+通过调用因子库的 getTable 方法即可获得指定名称的因子表对象::
+
+    >>>FT = TSDB.getTable(table_name="A股日线行情")
+    
+每张因子表中都包含若干个因子, 可以查看因子表对象的 FactorNames 属性获取特定因子表包含的因子名列表::
+
+    >>>print(FT.FactorNames)
+    ['开盘价', '最高价', '最低价', '收盘价', '昨收价', '涨跌额', '涨跌幅', '成交量(手)', '成交额(千元)', '交易日期']
+
+因子表除了因子这个维度外, 还有两个维度: 时间和 ID, 可以通过调用方法 getDateTime 和 getID 获取这两个维度的信息::
+    
+    >>>import datetime as dt
+    >>>DTs = FT.getDateTime(start_dt=dt.datetime(2018,1,1), end_dt=dt.datetime(2018,10,15))
+    >>>IDs = FT.getID()
+
+getDateTime 有两个额外的参数 start_dt, end_dt 控制提取的起止时间, DTs 是一个元素为 datetime 的列表, IDs 是一个元素为 ID 的列表::
+
+    >>>print(DTs[-3:])
+    [datetime.datetime(2018, 10, 11, 0, 0), datetime.datetime(2018, 10, 12, 0, 0), datetime.datetime(2018, 10, 15, 0, 0)]
+    >>>print(IDs[:4])
+    ['000001.SZ', '000002.SZ', '000003.SZ', '000004.SZ']
+
+因子表通过调用方法 readData 来获取因子数据, 该方法需要提供因子, 时间和 ID 三个维度的信息作为参数::
+
+    >>>Data = FT.readData(factor_names=["开盘价", "收盘价"], ids=IDs[:4], dts=DTs[-3:])
+
+Data 是一个 pandas 的 Panel 类型, 其 items 为因子列表, major_axis 为时间序列, minor_axis 为 ID 序列::
+
+    >>>print(Data)
+    <class 'pandas.core.panel.Panel'>
+    Dimensions: 2 (items) x 3 (major_axis) x 4 (minor_axis)
+    Items axis: 开盘价 to 收盘价
+    Major_axis axis: 2018-10-11 00:00:00 to 2018-10-15 00:00:00
+    Minor_axis axis: 000001.SZ to 000004.SZ
+
+获取因子的切片数据(有时候最后一行无数据, 是因为运行时 tushare 尚未更新当天的数据)::
+    
+    >>>print(Data.loc["收盘价"])
+    ID          000001.SZ  000002.SZ  000003.SZ  000004.SZ
+    2018-10-11       9.86      20.93        NaN        NaN
+    2018-10-12      10.30      21.80        NaN        NaN
+    2018-10-15      10.11      21.47        NaN        NaN
+
+获取时间的切片数据::
+    
+    >>>print(Data.loc[:, dt.datetime(2018, 10, 11)])
+                 开盘价    收盘价
+    ID                     
+    000001.SZ  10.05   9.86
+    000002.SZ  21.00  20.93
+    000003.SZ    NaN    NaN
+    000004.SZ    NaN    NaN
+
+获取 ID 的切片数据::
+
+    >>>print(Data.loc[:, :, "000001.SZ"])
+                  开盘价    收盘价
+    2018-10-11  10.05   9.86
+    2018-10-12   9.97  10.30
+    2018-10-15  10.39  10.11
+
+因子表可以通过调用方法 getFactor 来获取相应的因子对象::
+    
+    >>>Close = FT.getFactor(ifactor_name="收盘价")
+
+因子对象同样有 getDateTime, getID 方法来获取维度信息以及 readData 方法来读取数据::
+
+    >>>iDTs = Close.getDateTime()
+    >>>iIDs = Close.getID()
+    >>>iData = Close.readData(ids=iIDs[:4], dts=iDTs[-3:])
+    >>>print(iDTs[-3:])
+    [datetime.datetime(2018, 11, 9, 0, 0), datetime.datetime(2018, 11, 12, 0, 0), datetime.datetime(2018, 11, 13, 0, 0)]
+    >>>print(iIDs[:4])
+    ['000001.SZ', '000002.SZ', '000003.SZ', '000004.SZ']
+    >>>print(iData)
+    ID          000001.SZ  000002.SZ  000003.SZ  000004.SZ
+    2018-11-09      10.55      23.55        NaN      16.18
+    2018-11-12      10.56      23.88        NaN      16.59
+    2018-11-13      10.54      23.94        NaN      17.12
+
+因子对象之间可以进行多种运算以生成新的因子, 下面我们获取最高价, 最低价两个因子, 然后定义两者的平均值作为 Mid 因子::
+
+    >>>High, Low = FT.getFactor("最高价"), FT.getFactor("最低价")
+    >>>Mid = (High + Low) / 2
+    >>>print(Mid.readData(ids=iIDs[:4], dts=iDTs[-3:]))
+                000001.SZ  000002.SZ  000003.SZ  000004.SZ
+    2018-11-09     10.565     23.930        NaN     16.190
+    2018-11-12     10.480     23.680        NaN     16.415
+    2018-11-13     10.515     23.735        NaN     17.090
+
+QuantStudio 基本上重载了所有的 Python 运算符, 一般的数学运算可以直接使用 Python 表达式. 另外, QS.FactorDB.FactorTools 模块中还定义了大量的内置运算, 并支持更灵活的自定义算子, 详情参见 :ref:`因子定义`.
+
+除了从因子库中直接获取已经存在的因子表外, 还可以自定义因子表, 即通过 QuantStudio 提供的 CustomFT 类实例化一个因子表::
+
+    >>>CFT = QS.FactorDB.CustomFT(name="MyFT")
+
+目前, CFT 还是一个空的因子表, 其并不包含因子, 需要调用其方法 addFactors 来添加因子, 比如添加上文中因子表 FT 中的因子::
+
+    >>>CFT.addFactors(factor_table=FT, factor_names=["开盘价", "最高价", "最低价"])
+    >>>print(CFT.FactorNames)
+    ['开盘价', '最低价', '最高价']
+
+也可以添加因子对象, 比如添加上文中获得的因子 Close::
+
+    >>>CFT.addFactors(factor_list=[Close])
+    >>>print(CFT.FactorNames)
+    ['开盘价', '收盘价', '最低价', '最高价']
+
+这里需要注意的是上文中创建的 Mid 这种运算生成的因子不能直接添加到 CFT 中, 因为其还不是完全的因子对象, 比如其并没有赋予名称, 需要调用 FactorDB 模块下的 Factorize 函数来完全化::
+    
+    >>>Mid = QS.FactorDB.Factorize(Mid, factor_name="中间价")
+
+经过完全化之后的因子就和一般的因子对象完全一样, 也可以添加到自定义因子表 CFT 中了::
+
+    >>>CFT.addFactors(factor_list=[Mid])
+    >>>print(CFT.FactorNames)
+    ['中间价', '开盘价', '收盘价', '最低价', '最高价']
+
+另外, 自定义因子表还可以调用 deleteFactors 和 renameFactor 来删除和重命名已经添加的因子. 
+
+添加好因子后, CFT 仍不完整, 还缺少时间和 ID 两个维度的信息, 可以通过调用 setDateTime 和 setID 来设置这两个维度::
+
+    >>>CFT.setDateTime(dts=DTs[-3:])
+    >>>CFT.setID(ids=IDs[:4])
+
+这样, CFT 就是一个完整的因子表了, 其可以像前面介绍过的因子表 FT 那样使用来获取维度信息和数据了::
+
+    >>>print(CFT.FactorNames)
+    ['中间价', '开盘价', '收盘价', '最低价', '最高价']
+    >>>print(CFT.getDateTime())
+    [datetime.datetime(2018, 10, 11, 0, 0), datetime.datetime(2018, 10, 12, 0, 0), datetime.datetime(2018, 10, 15, 0, 0)]
+    >>>print(CFT.getID())
+    ['000001.SZ', '000002.SZ', '000003.SZ', '000004.SZ']
+    >>>Data = CFT.readData(factor_names=["开盘价", "收盘价"], ids=IDs[:4], dts=DTs[-3:])
+    >>>print(Data)
+    <class 'pandas.core.panel.Panel'>
+    Dimensions: 2 (items) x 3 (major_axis) x 4 (minor_axis)
+    Items axis: 开盘价 to 收盘价
+    Major_axis axis: 2018-10-11 00:00:00 to 2018-10-15 00:00:00
+    Minor_axis axis: 000001.SZ to 000004.SZ
+
+除了这些基本方法, 每个因子表可能包含若干个参数来控制数据生成的行为, 具体的参数信息参看: :ref:`因子数据库`.
+
+
+因子数据存储
+------------
+
+上一节中我们的数据全部来自于 tushare, 除了 TushareDB, QuantStudio 还有基于 Wind 金融工程数据库的因子库 WindDB, 基于 Wind 量化研究数据库的因子库 WindDB2, 这些因子库均依赖于外部数据, 每次使用数据均需要重新从外部数据源提取并计算. 比如上一节中定义的新因子 Mid(中间价), 每次使用该因子时 QuantStudio 内部均需提取 High(最高价) 和 Low(最低价) 数据, 然后做求平均值的运算, 当然 Mid 因子的运算并不复杂, 并不会严重拖累效率, 但在研究中经常碰到运算比较复杂的因子, 如果每个因子都是如此取用, 将非常影响脚本运行速度, 并且使得代码冗长. 基于上述原因, QuantStudio 提供了若干个本地化的因子库, 可以将因子数据存储到本地, 在使用时直接读取本地数据, 不需重新计算, 从而提高效率.
+
+根据存储方式的不同, 本地因子库有基于 HDF5 文件的因子库 HDF5DB, 基于关系数据库的因子库 SQLDB, 还有基于非关系型数据库的因子库 ArcticDB, 这里以 HDF5DB 为例进行说明.
+
+同上一节一样, 使用 HDF5DB 首先要实例化一个因子库对象并连接, HDF5DB 的类同样定义在 FactorDB 子模块下, HDF5DB 初始化需要一个额外参数, 指明数据文件存储的主目录, 比如这里打算将数据存储在文件夹 "C:\HDF5Data" 下::
+
+    >>>HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})# 注意 Windows 系统下地址分隔符需要写成 \\
+    >>>HDB.connect()
+    >>>print(HDB.TableNames)
+    []
+
+(上述代码运行前需要导入 QuantStudio), 可以看到, 当前因子库中并无任何数据, 所以因子表列表是空 list. 下面我们将上一节中定义的 High, Low, Mid 因子存储到因子库 HDB 里. 首先得到各个因子对象::
+
+    >>>TSDB = QS.FactorDB.TushareDB()
+    >>>TSDB.connect()
+    >>>FT = TSDB.getTable(table_name="A股日线行情")
+    >>>High, Low = FT.getFactor("最高价"), FT.getFactor("最低价")
+    >>>Mid = QS.FactorDB.Factorize((High + Low) / 2, factor_name="中间价")
+
+然后调用各个因子对象的 readData 方法获取数据::
+
+    >>>import datetime as dt
+    >>>DTs = High.getDateTime(start_dt=dt.datetime(2018, 9, 1), end_dt=dt.datetime(2018, 9, 5))
+    >>>IDs = High.getID()[:5]
+    >>>Data = {"最高价": High.readData(ids=IDs, dts=DTs), 
+               "最低价": Low.readData(ids=IDs, dts=DTs), 
+               "中间价": Mid.readData(ids=IDs, dts=DTs)}
+
+这里将所有数据都存储在一个字典中, key 是因子名, value 是 pandas 的 DataFrame 类型的因子数据. 本地因子库都有一个方法 writeData 来实现数据的存储. writeData 方法有四个参数: data, table_name, if_exists, data_type. 其中, data 是要写入的数据, 类型为 pandas.Panel, 这里可以直接将字典转换成 Panel; table_name 是要存入的因子表名称; if_exists 用于指明如果因子库中同名因子已经存在的数据更新方法, 可选: "update"(默认值), "append", "update" 表示新旧数据重叠的部分以新写入的数据为准, "append" 表示新旧数据重叠的部分以已有数据为准; data_type 用于指明每个待写入因子的数据类型, 如果未指明则交由 QuantStudio 自动判断, 默认值为空字典::
+
+    >>>import pandas as pd
+    >>>HDB.writeData(data=pd.Panel(Data), table_name="TestTable")
+
+这样再打印 HDB 的因子表列表就可以发现多了一张因子表 TestTable::
+
+    >>>print(HDB.TableNames)
+    ['TestTable']
+
+我们就可以像上一节一样使用 HDB 因子库中的数据了::
+
+    >>>HFT = HDB.getTable("TestTable")
+    >>>print(HFT.FactorNames)
+    ['中间价', '最低价', '最高价']
+    >>>HData = HFT.readData(factor_names=["中间价", "最高价"], ids=IDs, dts=DTs)
+    >>>print(HData)
+    <class 'pandas.core.panel.Panel'>
+    Dimensions: 2 (items) x 3 (major_axis) x 5 (minor_axis)
+    Items axis: 中间价 to 最高价
+    Major_axis axis: 2018-09-03 00:00:00 to 2018-09-05 00:00:00
+    Minor_axis axis: 000001.SZ to 000005.SZ
+
+上述方式是手动的将数据一一提取出后再转存到 HDB 中, 对于数据量不是很大的情况比较适用, 但对于因子数量, 提取的证券以及时间较长的情况效率很低. QuantStudio 提供一个方法用于大量因子数据的计算和存储. 以下是一个简单的示例脚本, 依然以上面三个因子为例::
+
+    # coding=utf-8
+    import datetime as dt
+    import QuantStudio.api as QS
+
+    TSDB = QS.FactorDB.TushareDB(sys_args={"token":"123456"})# token 设置为自己注册的 token
+    TSDB.connect()
+
+    FT = TSDB.getTable("A股日线行情")
+
+    High, Low = FT.getFactor("最高价"), FT.getFactor("最低价")
+    Mid = QS.FactorDB.Factorize((High + Low) / 2, factor_name="中间价")
+
+    if __name__=='__main__':
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})# 主目录为数据存放的文件夹路径
+        HDB.connect()
+        
+        DTs = High.getDateTime(start_dt=dt.datetime(2018, 9, 1), end_dt=dt.datetime(2018, 9, 5))
+        IDs = High.getID()[:5]
+        
+        CFT = QS.FactorDB.CustomFT("TestTable")
+        CFT.addFactors(factor_list=[High, Low, Mid])
+        
+        CFT.write2FDB(factor_names=CFT.FactorNames, ids=IDs, dts=DTs, factor_db=HDB, table_name="TestTable", 
+                      if_exists="update", subprocess_num=3)
+        
+        HDB.disconnect()
+        TSDB.disconnect()
+
+这个脚本和上面在 shell 里写的大部分是相似的, 不同之处在于这里创建了一个自定义因子表 CFT, 将定义好的因子添加到了 CFT 中, 然后调用了因子表的方法 write2FDB. 每个因子表都有这个方法, 其作用是将该因子表中的因子数据存储到指定的因子库中. 该方法有 7 个参数, 分别为:
+
+    * factor_names: 因子表中需要存储数据的因子名称列表, 这里我们要存储所有的因子, 所以赋值为 CFT.FactorNames;
+    * ids: 因子数据提取的 ID 列表;
+    * dts: 因子数据提取的时间列表;
+    * factor_db: 数据要存入的因子库, 这里为 HDB
+    * table_name: 数据要存入的因子表名称
+    * if_exists: 如果因子库中同名因子已经存在的数据更新方法, 说明见上文
+    * subprocess_num: 数据并行计算开启的子进程数目, 默认值是本地 CPU 数量 - 1
+
+另外需要注意的一点是, 由于运算过程中需要开启子进程, 所以除了因子定义以外的代码都要放在 if __name__=='__main__': 之下.
+
+
+
+回测模型
+--------
+
+QuantStudio 的一个主要功能就是对各种各样的模型使用历史数据进行回测, 比如交易策略, 绩效归因, 因子选股能力等等. QuantStudio 提供了一个统一的框架来回测这些模型. 回测功能集中在 BackTest 模块中, 详情参见 :ref:`回测模型`. 下面分具体问题进行演示.
+
+.. _因子截面测试示例:
+
+因子截面测试
+````````````
+
+一个简单的因子截面测试脚本如下::
+
+    # coding=utf-8
+    import datetime as dt
+
+    import numpy as np
+    import pandas as pd
+
+    if __name__=='__main__':
+        import QuantStudio.api as QS
+
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})# 主目录为数据存放的文件夹路径
+        HDB.connect()
+        FT = HDB.getTable("ElementaryFactor")
+        DTs = FT.getDateTime(start_dt=dt.datetime(2017, 1, 1), end_dt=dt.datetime(2017, 12, 31))
+        DTs = QS.Tools.DateTime.getMonthLastDateTime(DTs)
+        IDs = FT.getID()
+        
+        # 创建自定义因子表
+        CFT = QS.FactorDB.CustomFT("CFT")
+        Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+        AdjClose = QS.FactorDB.Factorize(Close * AdjFactor, factor_name="复权收盘价")
+        CFT.addFactors(factor_list=[AdjClose])
+        CFT.addFactors(factor_table=FT, factor_names=["成交金额"], args={})
+        CFT.setDateTime(DTs)
+        CFT.setID(IDs)
+        
+        # 创建回测模型
+        Model = QS.BackTest.BackTestModel()
+        
+        # 添加回测模块
+        # IC 测试
+        iModule = QS.BackTest.SectionFactor.IC(factor_table=CFT)
+        iModule["测试因子"] = ["成交金额"]
+        iModule["排序方向"] = {"成交金额": "升序"}
+        iModule["价格因子"] = "复权收盘价"
+        iModule["行业因子"] = "无"
+        iModule["权重因子"] = "等权"
+        iModule["计算时点"] = DTs
+        iModule["回溯期数"] = 1
+        iModule["相关性算法"] = "spearman"
+        iModule["筛选条件"] = ""
+        iModule["滚动平均期数"] = 12
+        Model.Modules.append(iModule)
+        
+        # 运行模型
+        Model.run(dts=DTs)
+        
+        # 查看结果
+        QS.Tools.QtGUI.showOutput(Model.output())
+
+下面逐行解释这个脚本.
+
+由于 QuantStudio 在回测时会启动多个子进程, 所以主要代码需要写在::
+
+    if __name__=='__main__':
+
+之下, 这里数据从基于 HDF5 文件的因子库 HDF5DB 获得, 首先创建因子库对象, 并获取需要的一些维度信息::
+
+    HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})# 主目录为数据存放的文件夹路径
+    HDB.connect()
+    FT = HDB.getTable("ElementaryFactor")
+    DTs = FT.getDateTime(start_dt=dt.datetime(2017, 1, 1), end_dt=dt.datetime(2017, 12, 31))
+    DTs = QS.Tools.DateTime.getMonthLastDateTime(DTs)
+    IDs = FT.getID()
+
+这里我们时间段选取 2017 年一年月底序列, Tools 子模块中提供了很多功能函数, 比如这里获取月底序列调用了其 DateTime 下的 getMonthLastDateTime 函数.
+
+接着, 创建一个自定义因子表, 将用到的因子都添加到一张表里::
+
+    CFT = QS.FactorDB.CustomFT("CFT")
+    Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+    AdjClose = QS.FactorDB.Factorize(Close * AdjFactor, factor_name="复权收盘价")
+    CFT.addFactors(factor_list=[AdjClose])
+    CFT.addFactors(factor_table=FT, factor_names=["成交金额"], args={})
+    CFT.setDateTime(DTs)
+    CFT.setID(IDs)
+
+由于计算需要复权价, 首先获取收盘价和复权因子::
+
+    Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+
+接着通过一个乘法运算得到后复权价格 AdjClose, 然后将用到的所有因子添加到自定义因子表 CFT 中, 并设置时间和 ID 维度信息.
+
+数据有了之后, 便是创建回测模型, 回测模型通过子模块 BackTest 下的类 BackTestModel 实例化得到::
+
+    Model = QS.BackTest.BackTestModel()
+
+这样的创建的模型是一个空模型, 需要添加待测试的模块, 这里仅添加一个 IC 测试模块(其他的因子截面测试模块参见 :ref:`因子截面测试`), 因子截面测试的功能模块在 BackTest.SectionFactor 下, 第一步实例化一个模块对象::
+
+    iModule = QS.BackTest.SectionFactor.IC(factor_table=CFT)
+    
+第二部设置模块的参数::
+
+    iModule["测试因子"] = ["成交金额"]
+    iModule["排序方向"] = {"成交金额": "升序"}
+    iModule["价格因子"] = "复权收盘价"
+    iModule["行业因子"] = "无"
+    iModule["权重因子"] = "等权"
+    iModule["计算时点"] = DTs
+    iModule["回溯期数"] = 1
+    iModule["相关性算法"] = "spearman"
+    iModule["筛选条件"] = ""
+    iModule["滚动平均期数"] = 12
+    Model.Modules.append(iModule)
+
+最后添加到模型中即可::
+
+    Model.Modules.append(iModule)
+
+需要测试的功能模块全部添加好之后, 即可调用模型的 run 方法运行模型测试::
+
+    Model.run(dts=DTs)
+
+run 方法需要提供待测试的时间序列, 这里使用因子表的所有时间进行测试. 测试好之后可以调用模型的 output 方法获得测试结果, 这里还使用了 Tools.QtGUI 模块下的功能函数 showOutput 来展示结果::
+
+    QS.Tools.QtGUI.showOutput(Model.output())
+
+
+策略测试
+````````
+
+一个简单的策略测试脚本如下::
+
+    # coding=utf-8
+    import datetime as dt
+
+    import numpy as np
+    import pandas as pd
+
+    import QuantStudio.api as QS
+
+    class BuyAndHoldStrategy(QS.BackTest.Strategy.Strategy):
+        """买入并持有策略"""
+        def init(self):
+            self.ModelArgs["TargetID"] = "000001.SZ"# 进行交易的目标 ID
+        def trade(self, idt, trading_record, signal):
+            TargetID = self.ModelArgs["TargetID"]
+            if self.Accounts[0].PositionNum[TargetID]==0:
+                self.Accounts[0].order(TargetID, 1)
+
+    if __name__=='__main__':
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})# 主目录为数据存放的文件夹路径
+        HDB.connect()
+        FT = HDB.getTable("ElementaryFactor")
+        DTs = FT.getDateTime(start_dt=dt.datetime(2017, 1, 1), end_dt=dt.datetime(2017, 12, 31))
+        DTs = QS.Tools.DateTime.getMonthLastDateTime(DTs)
+        IDs = FT.getID()
+        
+        # 创建自定义因子表
+        CFT = QS.FactorDB.CustomFT("CFT")
+        Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+        AdjClose = QS.FactorDB.Factorize(Close * AdjFactor, factor_name="复权收盘价")
+        CFT.addFactors(factor_list=[AdjClose])
+        CFT.setDateTime(DTs)
+        CFT.setID(IDs)
+        
+        # 创建回测模型
+        Model = QS.BackTest.BackTestModel()
+        
+        # 添加回测模块
+        iModule = BuyAndHoldStrategy(name="买入并持有策略")
+        iAccount = QS.BackTest.Strategy.DefaultAccount(market_ft=CFT)
+        iAccount["初始资金"] = 1e4
+        iAccount["负债上限"] = 0
+        iAccount["交易延迟"] = False
+        iAccount["最新价"] = "复权收盘价"
+        iAccount["买入限制"]["交易费率"] = 0.0
+        iAccount["卖出限制"]["交易费率"] = 0.0
+        iModule.Accounts.append(iAccount)
+        Model.Modules.append(iModule)
+        
+        # 运行模型
+        Model.run(dts=DTs)
+        
+        # 查看结果
+        QS.Tools.QtGUI.showOutput(Model.output())
+
+因子库和因子表的创建设置, 模型创建以及运行, 结果展示等代码同 :ref:`因子截面测试示例` 基本相似, 这里不再赘述. 不同点主要在于策略对象的创建和设置, 下面重点阐述.
+
+在 QuantStudio 中, 每个策略都是一个 BackTest.Strategy.Strategy 类的对象, 定义新的策略需要继承自这个类, 并将策略逻辑实现在相应的方法里, 然后用这个新的策略类实例化策略对象, 并设置相关参数后添加到模型中即可.
+
+这里定义了一个新的策略: 买入并持有策略, 类的定义如下::
+
+    class BuyAndHoldStrategy(QS.BackTest.Strategy.Strategy):
+        """买入并持有策略"""
+        def init(self):
+            self.ModelArgs["TargetID"] = "000001.SZ"# 进行交易的目标 ID
+        def trade(self, idt, trading_record, signal):
+            TargetID = self.ModelArgs["TargetID"]
+            if self.Accounts[0].PositionNum[TargetID]==0:
+                self.Accounts[0].order(TargetID, 1)
+
+如上所示, BuyAndHoldStrategy 继承自 QS.BackTest.Strategy.Strategy, 新类实现了两个方法: init 和 trade. 
+
+init 方法在策略回测前调用, 主要是初始化策略需要的一些参数, 比如这里定义了一个参数 "TargetID", 其表示策略将要交易的证券 ID, 策略的参数放在对象属性 ModelArgs 中, ModelArgs 默认是一个空字典, 通过添加新的键值储存参数, 另外, 策略对象还提供了一个属性 UserData, 其也是一个空字典, 用于存储策略运行过程中的一些临时数据.
+
+trade 方法在策略回测的每个时点都会调用, 时点信息可以从其参数 idt 中获得, trading_record 是上一个时点的交易记录, 数据类型为 pandas 的 DataFrame, columns 为 ["时间点", "ID", "买卖数量", "价格", "交易费", "现金收支", "类型"]. trade 方法中实现策略的主要逻辑, 这里的逻辑比较简单, 即买入一股 000001.SZ, 并一直持有, 所以首先检查 000001.SZ 的持仓数量, 如果为 0 则买入一股, 否则不进行任何交易. 像持仓数量等账户信息存储在账户对象中, 策略对象的属性 Accounts 中存储了策略用到的所有账户对象, Accounts 属性会在创建策略对象后赋值, 可以在 trade 等类方法中使用. 这里的策略比较简单, 只用到一个账户, 即 Accounts[0], 通过调用账户对象的方法 order 来实现模拟下单, order 方法的第一个参数为证券 ID, 第二个参数为交易数量, 正数表示买入, 负数表示卖出.
+
+有关策略对象以及账户对象的具体细节参见 :ref:`策略测试`.
+
+下面的代码中, 首先利用新的策略类 BuyAndHoldStrategy 实例化了一个策略对象::
+    
+    iModule = BuyAndHoldStrategy(name="买入并持有策略")
+    
+, 接着用 BackTest.Strategy.DefaultAccount 账户类实例化了一个账户对象::
+
+    iAccount = QS.BackTest.Strategy.DefaultAccount(market_ft=CFT)
+
+设置好账户对象的一些参数后添加到策略中来::
+
+    iModule.Accounts.append(iAccount)
+
+最后将策略添加的回测模型中::
+    
+    Model.Modules.append(iModule)
+
+
+绩效分析
+````````
+
+一个简单的绩效分析脚本如下::
+
+    # coding=utf-8
+    import datetime as dt
+
+    if __name__=='__main__':
+        import QuantStudio.api as QS
+        
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录": "C:\\HDF5Data"})
+        HDB.connect()
+        FT = HDB.getTable("ElementaryFactor")
+        
+        IDs = FT.getID()
+        DTs = FT.getDateTime(start_dt=dt.datetime(2017, 1, 1), end_dt=dt.datetime(2017, 12, 31))
+        DTs = QS.Tools.DateTime.getMonthLastDateTime(DTs)
+        
+        # 创建自定义因子表
+        CFT = QS.FactorDB.CustomFT("CFT")
+        Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+        AdjClose = QS.FactorDB.Factorize(Close * AdjFactor, factor_name="复权收盘价")
+        CFT.addFactors(factor_list=[AdjClose])
+        CFT.addFactors(factor_table=FT, factor_names=["Wind行业"], args={})
+        CFT.addFactors(factor_table=HDB.getTable("IndexConstituentFactor"), factor_names=["中证500成份权重", "中证800成份权重"])
+        CFT.setDateTime(DTs)
+        CFT.setID(IDs)
+        
+        # 创建回测模型
+        Model = QS.BackTest.BackTestModel()
+
+        # 添加回测模块
+        iModule = QS.BackTest.PerformanceAnalysis.BrinsonModel(factor_table=CFT)
+        iModule["策略组合"] = "中证500成份权重"
+        iModule["基准组合"] = "中证800成份权重"
+        iModule["资产类别"] = "Wind行业"
+        iModule["价格因子"] = "复权收盘价"
+        iModule["计算时点"] = DTs
+        Model.Modules.append(iModule)
+        
+        # 运行模型
+        Model.run(dts=DTs)
+        
+        # 查看结果
+        QS.Tools.QtGUI.showOutput(Model.output())
+
+因子库和因子表的创建设置, 模型创建以及运行, 结果展示等代码同 :ref:`因子截面测试示例` 基本相似, 这里不再赘述. 不同点主要在于绩效分析模块的创建和设置, 下面重点阐述.
+
+在 QuantStudio 中, 绩效分析模型定义在 BackTest.PerformanceAnalysis 子模块下, 上述例子中使用了 Brinson 模型, 通过 BrinsonModel 类实例化了模块对象, 然后设置了相关参数, 最后添加到 Model 对象中.
+
+
+风险模型
+--------
+
+由于目前没有性价比较好的风险数据提供商, QuantStudio 实现了基本的风险模型和风险数据的计算存储. 风险模型的功能集中在 RiskModel 模块中, 模块说明以及风险模型的细节参见 :ref:`风险模型`.
+
+
+风险数据读取
+````````````
+
+QuantStudio 中的风险数据来自于各个风险库, 每个风险库对应一个风险库类, 目前我们考虑的风险模型主要是两类, 一类是无结构的风险模型, 即风险矩阵就是一个以证券 ID 索引的二维矩阵, 比如通过历史收益率数据直接计算的协方差矩阵; 另一类是基于多因子模型得到的结构化的风险矩阵, 该矩阵可以分解为系统性风险和特异性风险两部分.
+
+下面以结构化的多因子风险数据库为例. 所有的风险数据库都在子模块 RiskDB 中, 首先创建风险数据库对象, 并链接::
+
+    >>>RDB = QS.RiskDB.HDF5FRDB(sys_args={"主目录": "C:\\RiskData"})
+    >>>RDB.connect()
+
+每个风险数据库中都包含若干张风险表, 可以查看风险数据库对象的 TableNames 属性获取特定风险库包含的风险表名列表::
+
+    >>>print(RDB.TableNames)
+    ['BarraRiskData']
+
+通过调用风险库的 getTable 方法即可获得指定名称的风险表对象::
+
+    >>>RT = RDB.getTable(table_name="BarraRiskData")
+
+通过调用风险表的 readCov 方法读取风险数据, readCov 方法有三个参数: dts, ids, 其中, dts 是待提取的时间点列表, ids 是待提取的 ID 列表, 默认值是 None 表示提取表中所有的 ID::
+
+    >>>Cov = RT.readCov(dts=[dt.datetime(2017,12,29)], ids=None)
+    >>>print(Cov)
+    <class 'pandas.core.panel.Panel'>
+    Dimensions: 1 (items) x 3562 (major_axis) x 3562 (minor_axis)
+    Items axis: 2017-12-29 00:00:00 to 2017-12-29 00:00:00
+    Major_axis axis: 000001.SZ to T00018.SH
+    Minor_axis axis: 000001.SZ to T00018.SH
+    
+readCov 方法返回的是 pandas 的 Panel 类型, 其 items 是时间序列, major_axis 和 minor_axis 均是 ID 序列, 获取某个时点的风险矩阵::
+
+    >>>print(Cov.iloc[0, :5, :5])
+               000001.SZ  000002.SZ  000003.SZ  000004.SZ  000005.SZ
+    000001.SZ   0.006828   0.001058        NaN   0.002642   0.001892
+    000002.SZ   0.001058   0.011993        NaN   0.002116   0.001523
+    000003.SZ        NaN        NaN        NaN        NaN        NaN
+    000004.SZ   0.002642   0.002116        NaN   0.024474   0.006281
+    000005.SZ   0.001892   0.001523        NaN   0.006281   0.007950
+
+对于风险矩阵为协方差阵的情形, 风险数据库对象还可以通过 readCorr 方法来获取相关系数矩阵, 其参数和返回值同 readCov 类似::
+ 
+    >>>Corr = RT.readCorr(dts=[dt.datetime(2017,12,29)])
+    >>>print(Corr)
+    <class 'pandas.core.panel.Panel'>
+    Dimensions: 1 (items) x 3562 (major_axis) x 3562 (minor_axis)
+    Items axis: 2017-12-29 00:00:00 to 2017-12-29 00:00:00
+    Major_axis axis: 000001.SZ to T00018.SH
+    Minor_axis axis: 000001.SZ to T00018.SH
+    >>>print(Corr.iloc[0, :5, :5])
+           000001.SZ  000002.SZ  000003.SZ  000004.SZ  000005.SZ
+    000001.SZ   1.000000   0.000010        NaN   0.000034   0.000014
+    000002.SZ   0.000010   1.000000        NaN   0.000036   0.000015
+    000003.SZ        NaN        NaN        NaN        NaN        NaN
+    000004.SZ   0.000034   0.000036        NaN   1.000000   0.000088
+    000005.SZ   0.000014   0.000015        NaN   0.000088   1.000000
+
+对于风险表的一些维度信息, 可以通过调用方法 getDateTime 和 getID 获得::
+
+    >>>DTs = RT.getDateTime(start_dt=dt.datetime(2017,1,1), end_dt=dt.datetime(2017,12,31))
+    >>>IDs = IDs = RT.getID()
+    >>>print(DTs[:3])
+    [datetime.datetime(2017, 1, 26, 0, 0), datetime.datetime(2017, 2, 28, 0, 0), datetime.datetime(2017, 3, 31, 0, 0)]
+    >>>print(IDs[:5])
+    ['000001.SZ', '000002.SZ', '000003.SZ', '000004.SZ', '000005.SZ']
+
+对于基于多因子模型的结构化风险数据库, 还有一些额外的信息可以读取, 比如因子协方差矩阵, 特异性风险等等.
+
+方法 readFactorCov 用于读取因子协方差矩阵::
+
+    >>>FactorCov = RT.readFactorCov(dts=[dt.datetime(2017,12,29)])
+    >>>print(FactorCov)
+    <class 'pandas.core.panel.Panel'>
+    Dimensions: 1 (items) x 43 (major_axis) x 43 (minor_axis)
+    Items axis: 2017-12-29 00:00:00 to 2017-12-29 00:00:00
+    Major_axis axis: Market to Utilities
+    Minor_axis axis: Market to Utilities
+    >>>print(FactorCov.iloc[0, :5, :5])
+                          Market      Size      Beta  Momentum  ResidualVolatility
+    Market              0.001311 -0.000189  0.000392 -0.000180            0.000271
+    Size               -0.000189  0.000118 -0.000053  0.000045           -0.000060
+    Beta                0.000392 -0.000053  0.000173 -0.000073            0.000108
+    Momentum           -0.000180  0.000045 -0.000073  0.000072           -0.000055
+    ResidualVolatility  0.000271 -0.000060  0.000108 -0.000055            0.000093
+
+方法 readFactorData 用于读取因子暴露::
+
+    >>>FactorData = RT.readFactorData(dts=[dt.datetime(2017,12,29)])
+    >>>print(FactorData)
+    <class 'pandas.core.panel.Panel'>
+    Dimensions: 43 (items) x 1 (major_axis) x 3577 (minor_axis)
+    Items axis: Market to Utilities
+    Major_axis axis: 2017-12-29 00:00:00 to 2017-12-29 00:00:00
+    Minor_axis axis: 000001.SZ to T00018.SH
+    >>>print(FactorData.iloc[:5, 0, :5])
+               Market      Size      Beta  Momentum  ResidualVolatility
+    000001.SZ     1.0  1.232416  1.409380  1.104251           -0.434150
+    000002.SZ     1.0  1.670359 -0.111816  1.466253            2.164472
+    000003.SZ     1.0       NaN       NaN       NaN                 NaN
+    000004.SZ     1.0 -3.437957  0.278855 -1.307221            2.097539
+    000005.SZ     1.0 -3.027622  0.476271 -2.344371           -0.912783
+    
+方法 readSpecificRisk 用于读取特异性风险::
+
+    >>>SpecificRisk = RT.readSpecificRisk(dts=[dt.datetime(2017,12,29)])
+    >>>print(SpecificRisk.iloc[:, :4])
+                000001.SZ  000002.SZ  000003.SZ  000004.SZ
+    2017-12-29    0.06949   0.100747        NaN   0.124567
+
+readSpecificRisk 返回的是 DataFrame 类型, index 为时间序列, columns 为 ID 列表.
+
+方法 readFactorReturn 用于读取因子收益::
+
+    >>>FactorReturn = RT.readFactorReturn(dts=[dt.datetime(2017,12,29)])
+    >>>print(FactorReturn.iloc[:, :4])
+                  Market      Size     Beta  Momentum
+    2017-12-29  0.006256 -0.000317  0.00202  0.000601
+
+readFactorReturn 返回的是 DataFrame 类型, index 为时间序列, columns 为因子名列表.
+
+方法 readSpecificReturn 用于读取特异性收益::
+
+    >>>SpecificReturn = RT.readSpecificReturn(dts=[dt.datetime(2017,12,29)])
+    >>>print(SpecificReturn.iloc[:, :4])
+                000001.SZ  000002.SZ  000003.SZ  000004.SZ
+    2017-12-29   0.001535   0.000279        NaN  -0.001277
+    
+readSpecificReturn 返回的是 DataFrame 类型, index 为时间序列, columns 为 ID 列表.
+
+QuantStudio 其他模块中需要风险数据时往往需要输入的是风险表对象, 而非直接的风险数据库. 风险表除了以上述的方式进行使用, 还有一种遍历模式, 即在时间序列遍历型的运算中, 风险表可以提供更高效的数据读取.
+
+
+风险数据生成
+````````````
+
+风险数据生成的脚本如下::
+
+    # coding=utf-8
+    """生成风险数据"""
+    import datetime as dt
+
+    if __name__=='__main__':
+        import QuantStudio.api as QS
+        
+        #DTs = [dt.datetime(2005,1,31), dt.datetime(2005,2,28)]
+        StartDT, EndDT = dt.datetime(2017,1,1), dt.datetime(2017,4,30)
+        FDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})
+        FDB.connect()
+        DTs = QS.Tools.DateTime.getMonthLastDateTime(FDB.getTable("ElementaryFactor").getDateTime("日收益率", start_dt=StartDT, end_dt=EndDT))
+        
+        FT = QS.FactorDB.CustomFT("MainFT")
+        FT.addFactors(factor_table=FDB.getTable("ElementaryFactor"), factor_names=["日收益率", "总市值"])
+        FT.addFactors(factor_table=FDB.getTable("BarraDescriptor"), factor_names=["ESTU", "Industry"])
+        FT.addFactors(factor_table=FDB.getTable("BarraFactor"), factor_names=None)
+        FT.setDateTime(FDB.getTable("BarraDescriptor").getDateTime(ifactor_name="ESTU"))
+        FT.setID(FDB.getTable("BarraDescriptor").getID(ifactor_name="ESTU"))
+        
+        RDB = QS.RiskDB.HDF5FRDB(sys_args={"主目录":"C:\\RiskData"})
+        RDB.connect()
+        
+        Model = QS.RiskModel.BarraModel("MainModel", factor_table=FT, risk_db=RDB, table_name="BarraRiskData", config_file=None)
+        Model.setRiskESTDateTime(DTs)
+        Model.run()
+
+由于风险模型较为复杂, 这里只简单展示数据生成脚本, 其细节请参见: :ref:`风险模型`.
+
+
+组合优化
+--------
+
+由于很多的投资组合策略模型最后会归结为一个数学上的优化问题, 而优化问题的求解的算法往往较为复杂, 所以 QuantStudio 提供了投资组合构造器来辅助组合优化的实现. 投资组合构造器的功能集中在 PortfolioConstructor 子模块中.
+
+这里以最小方差组合的构建为例::
+
+    # -*- coding: utf-8 -*-
+    import datetime as dt
+
+    import numpy as np
+    import pandas as pd
+
+    import QuantStudio.api as QS
+
+    if __name__=='__main__':
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})
+        HDB.connect()
+        RDB = QS.RiskDB.HDF5FRDB(sys_args={"主目录":"C:\\RiskData"})
+        RDB.connect()
+        
+        # 创建投资组合构造器
+        import matlab.engine
+        MatlabEng = matlab.engine.start_matlab(option="-desktop")# 启动一个新的 MATLAB
+        #MatlabEng = matlab.engine.connect_matlab(name="MATLAB_147264")# 链接到一个已经启动的 MATLAB
+        PC = QS.PortfolioConstructor.MatlabPC(matlab_eng=MatlabEng)
+        #PC = QS.PortfolioConstructor.CVXPC(sys_args={"优化选项":{"solver":"MOSEK"}})
+        
+        # 设置相关数据
+        TargetDT = dt.datetime(2017, 12, 29)
+        FT = HDB.getTable("ElementaryFactor")
+        TargetIDs = FT.getID()[:500]
+        PC["目标ID"] = TargetIDs
+        PC["预期收益"] = FT.readData(factor_names=["月收益率"], ids=TargetIDs, dts=[TargetDT]).iloc[0, 0, :]
+        RT = RDB.getTable("BarraRiskData")
+        #PC["协方差矩阵"] = RT.readCov(dts=[TargetDT], ids=TargetIDs)[TargetDT]
+        PC["因子协方差阵"] = RT.readFactorCov(dts=[TargetDT]).loc[TargetDT]
+        PC["风险因子"] = RT.readFactorData(dts=[TargetDT], ids=TargetIDs).loc[:, TargetDT, :]
+        PC["特异性风险"] = RT.readSpecificRisk(dts=[TargetDT], ids=TargetIDs).loc[TargetDT, :]
+        PC["成交金额"] = FT.readData(factor_names=["成交金额"], ids=TargetIDs, dts=[TargetDT]).iloc[0, 0, :]
+        PC["初始投资组合"] = pd.Series(0.0,index=TargetIDs)
+        PC["总财富"] = 1000000000
+        
+        # 设置优化目标
+        Objective = QS.PortfolioConstructor.MeanVarianceObjective(pc=PC)
+        Objective["收益项系数"] = 0.0
+        Objective["风险厌恶系数"] = 1.0
+        PC["优化目标"] = Objective
+        
+        # 设置约束条件
+        # 预算约束
+        iConstraint = QS.PortfolioConstructor.BudgetConstraint(pc=PC)
+        iConstraint["限制上限"] = 1.0
+        iConstraint["限制下限"] = 1.0
+        PC["约束条件"].append(iConstraint)
+        # 权重约束
+        iConstraint = QS.PortfolioConstructor.WeightConstraint(pc=PC)
+        iConstraint["限制上限"] = 1.0
+        iConstraint["限制下限"] = 0.0
+        PC["约束条件"].append(iConstraint)
+        
+        # 求解优化问题
+        Portfolio, ResultInfo = PC.solve()
+        
+        print(Portfolio)
+        print(ResultInfo)
+        
+        HDB.disconnect()
+        RDB.disconnect()
+
+脚本首先创建了因子库 HDB, 风险库 RDB 用于提供相关数据, 接着实例化一个投资组合构造器对象 PC, 这个构造器依赖于 MATLAB 的优化器, 所以这两句是在创建一个 MATLAB engine 对象::
+
+    import matlab.engine
+    MatlabEng = matlab.engine.start_matlab(option="-desktop")# 启动一个新的 MATLAB
+    #MatlabEng = matlab.engine.connect_matlab(name="MATLAB_147264")# 链接到一个已经启动的 MATLAB
+
+如果 MATLAB 已经启动, 可以向上面注释掉的那行代码一样传入 MATLAB engine 的名字调用 connect_matlab 方法连接到打开的 MATLAB, 没有启动的话可以用 matlab.engine.start_matlab 来启动一个新的 MATLAB, 关于 MATLAB engine 的相关信息参照 MATLAB 帮助文档. 此外, 该构造器调用的是 MATLAB 里的 yalmip 工具箱, 关于此工具箱的安装, 参照 "https://yalmip.github.io", 用户可以使用 yalmip 调用自己可获得的性能更好的优化器, 比如 CPLEX, MOSEK 等. 这里假设 MATLAB 以及 yalmip 已经设置好了.
+
+接下来是设置 PC 的相关参数和数据, 比如预期收益, 风险矩阵等等. 这里预期收益暂时使用月收益率数据代表(最小方差模型不需要预期收益, 也可以不用设置, 这里只是为了演示参数设置), 风险数据从风险数据库中读取.
+
+之后便是定义优化问题, 设置优化目标和约束条件, 优化目标通过 PortfolioConstructor 子模块下提供的各种优化目标类实例化得到, 这里使用 MeanVarianceObjective 均值方差目标, 约束条件也是通过 PortfolioConstructor 子模块下提供的各种约束条件类实例化得到, 这里使用了两种约束条件: BudgetConstraint(预算约束), WeightConstraint(权重约束), 优化目标和约束条件对象的初始化需要提供所属的投资组合构建器作为参数.
+
+最后调用投资组合构建器的 solve 方法求解优化问题得到投资组合, solve 返回值有两个: Portfolio 是投资组合, ResultInfo 是优化问题求解的相关信息, 数据类型为字典, 如果求解成功, Portfolio 为 Series 类型, index 是 ID 列表, 值为对应权重, ResultInfo 中的 key "Status" 对应的 value 为 1; 如果求解失败, Portfolio 为 None, ResultInfo 中的 key "Status" 对应的 value 为非 1 的值.

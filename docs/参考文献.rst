@@ -1,0 +1,16 @@
+﻿参考文献
+========
+
+.. [Grinold] Richard C. Grinold, Ronald N. Kahn, 1999, "Active Portfolio Management: A Quantitative Approach for Producing Superior Returns and Selecting Superior Money Managers", McGraw-Hill Professional.
+
+.. [CNE5] D. J. Orr, Igor Mashtaler, Adam Nagy, 2012, "The Barra China Equity Model(CNE5)", MSCI.
+
+.. [USE4] Jose Menchero, D. J. Orr and Jun Wang, 2011, "The Barra US Equity Model (USE4)", MSCI.
+
+.. [CHE2] Nathan Sosner, Xiaowei Li and Cuy Miller, 2005, "CHE2: Forecasting Chinese Equity Risk", MSCI.
+
+.. [EUE3] Beat G. Briner, Rachael C. Smith and Paul Ward, 2009, "The Barra Europe Equity Model (EUE3)", MSCI.
+
+.. [GEM2] Jose Menchero, Andrei Morozov and Peter Shepard, 2008, "The Barra Global Equity Model (GEM2)", MSCI.
+
+.. [Campbell-1996] John Y. Campbell, Andrew W. Lo, A. Craig MacKinlay, 1996, "The Econometrics of Financial Markets", Princeton University Press.

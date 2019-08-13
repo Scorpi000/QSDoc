@@ -1,0 +1,13 @@
+﻿因子名称,因子描述,排序方向,数据类型
+ValueFactor,"BP,EP_Fwd12M,SP_TTM,CFP_TTM,Sales2EV（参见价值因子表）标准化后等权合成的价值因子",降序,double
+GrowthFactor,"Earnings_SQ_YoY,SaleEarnings_SQ_YoY,Sales_SQ_YoY（参见成长因子表）标准化后等权合成的成长因子",降序,double
+MomentumFactor,"Momentum_1M,Momentum_3M,Momentum_60M（参见动量因子表）标准化后等权合成的动量因子",降序,double
+SentimentFactor,"EPSChange_FY0_1M,RatingChange_3M,TargetReturn（参见情绪因子表）标准化后等权合成的情绪因子",降序,double
+TradingBehaviorFactor,"Volume20D_240D,TSKEW_20D,VolumeCV_20D,TurnoverAvg_20D（参见技术因子表）,VWAPP_OLS（参见VWAPP因子表）,SpreadBias_120D（参见SpreadBias因子表）,IVR（参见FamaFrench因子表）标准化后等权合成的交易行为因子",降序,double
+TB_adjM,TradingBehaviorFactor相对MomentumFactor中性化后的因子,降序,double
+VG,ValueFactor 和 GrowthFactor 等权合成的因子,降序,double
+VS,ValueFactor 和 SentimentFactor 等权合成的因子,降序,double
+GM,GrowthFactor 和 MomentumFactor 等权合成的因子,降序,double
+VGS,ValueFactor，GrowthFactor 和 SentimentFactor 等权合成的因子,降序,double
+VGS_TB,VGS 和 TradingBehaviorFactor 等权合成的因子,降序,double
+VGS_TBadjM,VGS 和 TB_adjM 等权合成的因子,降序,double

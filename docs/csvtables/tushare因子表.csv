@@ -1,0 +1,6 @@
+因子表,tushare接口,因子表类型
+交易日历,trade_cal,交易日历
+股票基本资料,stock_basic,证券特征
+日线行情,daily,行情数据
+复权因子,adj_factor,行情数据
+指数成分和权重,index_weight,行情数据

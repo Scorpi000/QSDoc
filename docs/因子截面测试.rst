@@ -1,0 +1,379 @@
+﻿.. _因子截面测试:
+
+因子截面测试
+============
+
+因子截面测试模型
+----------------
+
+符号说明
+````````
+
+用变量
+:math:`i,1\le i\le N`
+标识证券, :math:`t,1\le t\le T` 表示时间, :math:`j,1\le j\le M` 表示因子. 
+
+:math:`r_{i}^{t}`: :math:`[t-1,t]` 时段证券 :math:`i` 的收益率, :math:`{{r}^{t}}=\left( r_{1}^{t},\ldots ,r_{i}^{t},\ldots ,r_{N}^{t} \right)` 表示在 :math:`[t-1,t]` 时段收益率的横截面向量. 
+
+:math:`\beta _{i,j}^{t}`: :math:`t` 时刻证券 :math:`i` 在因子 :math:`j` 上的暴露, :math:`\beta _{j}^{t}=\left( \beta _{1,j}^{t},\ldots ,\beta _{i,j}^{t},\ldots ,\beta _{N,j}^{t} \right)` 表示在 :math:`t` 时刻因子 :math:`j` 暴露的横截面向量, 横截面均值定义为: 
+
+.. math::
+
+    \bar{\beta }_{j}^{t}\text{=}\frac{1}{N}\sum\limits_{i=1}^{N}{\beta _{i,j}^{t}}
+
+:math:`f_{j}^{t}`: :math:`[t-1,t]` 时段因子 :math:`j` 的收益. 
+
+单因子测试
+``````````
+
+1. \ **Rank IC**\ : 往期因子值和当期收益率的秩相关性. 这里采用的相关系数为Spearman相关系数. 记收益率的横截面向量 :math:`{{r}^{t}}` 的秩向量记为 :math:`Q_{r}^{t}\text{=}{{\left( Q_{i,r}^{t} \right)}_{1\times N}}` （其每个元素 :math:`Q_{i,r}^{t}` 是 :math:`{{r}^{t}}` 中对应位置的元素 :math:`r_{i}^{t}` 在 :math:`{{r}^{t}}` 中的排名）, 在 :math:`t-1` 时刻因子 :math:`j` 暴露的横截面向量 :math:`\beta_{j}^{t}` 的秩向量记为 :math:`Q_{j}^{t}\text{=}{{\left( Q_{i,j}^{t} \right)}_{1\times N}}` （其每个元素 :math:`Q_{i,j}^{t}` 是 :math:`\beta_{j}^{t}` 中对应位置的元素 :math:`\beta_{i,j}^{t}` 在 :math:`\beta _{j}^{t}` 中的排名）, 那么 :math:`t` 时刻的Rank IC定义为: 
+
+    .. math::
+
+        \rho \left( Q_{r}^{t},Q_{j}^{t-1} \right)=\frac{\sum\limits_{i=1}^{N}{\left( Q_{i,r}^{t}-\bar{Q}_{r}^{t} \right)\left( Q_{i,j}^{t-1}-\bar{Q}_{j}^{t-1} \right)}}{\sqrt{\sum\limits_{i=1}^{N}{{{\left( Q_{i,r}^{t}-\bar{Q}_{r}^{t} \right)}^{2}}}\cdot \sum\limits_{i=1}^{N}{{{\left( Q_{i,j}^{t-1}-\bar{Q}_{j}^{t-1} \right)}^{2}}}}}
+
+其中: 
+
+    .. math::
+
+        \bar{Q}_{r}^{t}\text{=}\frac{1}{N}\sum\limits_{i=1}^{N}{Q_{i,r}^{t}}
+
+    .. math::
+
+        \bar{Q}_{j}^{t-1}\text{=}\frac{1}{N}\sum\limits_{i=1}^{N}{Q_{i,j}^{t-1}}
+
+2. \ **行业调整的 IC**\ : 扣除行业收益率后的Rank IC. 对于股票 :math:`i`, 其收益率 :math:`r_{i}^{t}` 的行业调整值定义为 :math:`\tilde{r}_{i}^{t}\text{=}r_{i}^{t}-R_{I}^{t}`, 其中, :math:`R_{I}^{t}` 为行业 :math:`I` 在时段 :math:`[t-1,t]` 的收益率, 即 :math:`R_{I}^{t}\text{=}\sum\limits_{i\in I}{w_{i}^{t}\cdot r_{i}^{t}}`, :math:`w_{i}^{t}` 为 :math:`t` 时刻股票 :math:`i` 在行业 :math:`I` 中所占的权重, 通常可取等权或者流通市值加权. 对于因子 :math:`j` , 行业调整的Rank IC即为调整后的收益率 :math:`{{\tilde{r}}^{t}}` 同 :math:`\beta_{j}^{t}` 的Rank IC（计算方法参照 1）. 
+3. \ **IC的衰减**\ : 因子值和收益率关于日期间隔的衰减情况. 对于因子 :math:`j` , 分别计算 :math:`{{r}^{t}}` 同 :math:`\beta _{j}^{t-1},\beta _{j}^{t-2},\ldots ,\beta _{j}^{t-K}` 的Rank IC（计算参照 1）, 考察Rank IC序列关于时间间隔 :math:`\left( 1,2,\ldots ,K \right)` 的变化情况. 
+4. \ **因子换手率**\ : 当期因子值和上期因子值横截面上的线性相关系数. 对于因子 :math:`j` , 日期 :math:`t` 和上一日期 :math:`t-1` 之间的换手率定义为: 
+
+    .. math::
+
+        \rho \left( \beta _{j}^{t},\beta _{j}^{t-1} \right)=\frac{\sum\limits_{i=1}^{N}{\left( \beta _{i,j}^{t}-\bar{\beta }_{j}^{t} \right)\left( \beta _{i,j}^{t-1}-\bar{\beta }_{j}^{t-1} \right)}}{\sqrt{\sum\limits_{i=1}^{N}{{{\left( \beta _{i,j}^{t}-\bar{\beta }_{j}^{t} \right)}^{2}}}\cdot \sum\limits_{i=1}^{N}{{{\left( \beta _{i,j}^{t-1}-\bar{\beta }_{j}^{t-1} \right)}^{2}}}}}
+
+5. \ **分位数组合**\ : 按因子值排序分组后形成的投资组合. 对于因子 :math:`j` , 在时刻 :math:`t` , 首先剔除因子值缺失的股票（通常也会剔除停牌、特别处理的股票）, 对剩下的股票按照因子暴露 :math:`\beta_{j}^{t}` 进行排序, 把排序后的股票平均分成 :math:`K` 组（一般取5或者10组）, 每一组构建投资组合（通常为等权或者流通市值加权）, 测试从时刻1到 :math:`T` 每一组的表现情况. 计算每一组的收益率, 年化收益率, 波动率等指标. 
+6. \ **分组组合**\ : 按因子值排序分组后形成的投资组合. 对于因子 :math:`j` , 在时刻 :math:`t` , 首先剔除因子值缺失的股票（通常也会剔除停牌、特别处理的股票）, 对剩下的股票按照因子暴露 :math:`\beta_{j}^{t}` 进行排序, 把排序后的股票按照确定比例、确定数量或者绝对的界限分成 :math:`K` 组, 每一组构建投资组合（通常为等权或者流通市值加权）, 测试从时刻1到 :math:`T` 每一组的表现情况. 计算每一组的收益率, 年化收益率, 波动率等指标. 
+7. \ **因子值行业分布**\ : 每个时刻, 每个行业内, 因子暴露超过某个阈值的股票比例. 阈值可以设置为所有因子暴露的平均值、中位数、25%分位数、75%分位数, 在时刻 :math:`t` , 对于行业 :math:`I` , 行业 :math:`I` 内的股票数为 :math:`N_{I}^{t}` , 行业 :math:`I` 内因子值超过阈值的股票数为 :math:`\tilde{N}_{I}^{t}` , 则行业 :math:`I` 的因子值分布为 :math:`{}^{N_{I}^{t}}/{}_{\tilde{N}_{I}^{t}}` . 
+
+
+多因子测试
+``````````
+
+1. \ **Fama-MacBeth 回归**\ : 剥离了给定风险因子后的因子收益率. 给定 :math:`K` 个风险因子（一般取市值, Beta, 行业等）, 记股票 :math:`i` 在这些风险因子上的暴露为 :math:`\tilde{\beta }_{i,1}^{t},\tilde{\beta }_{i,2}^{t},\ldots ,\tilde{\beta }_{i,K}^{t}` , 对于因子 :math:`j` , 在时刻 :math:`t` , 同风险因子一起与收益率向量 :math:`{{r}^{t}}` 做横截面回归, 即: 
+
+    .. math::
+
+        r_{i}^{t}=f_{j}^{t}\cdot \beta _{i,j}^{t-1}+\tilde{f}_{1}^{t}\cdot \tilde{\beta }_{i,1}^{t-1}+\cdots +\tilde{f}_{K}^{t}\cdot \tilde{\beta }_{i,K}^{t-1}+\varepsilon _{i}^{t}
+
+估计的回归系数 :math:`f_{j}^{t}` 即为剥离了这 :math:`K` 个风险因子后因子 :math:`j` 在时段 :math:`t` 的收益. 
+
+2. \ **因子相关性**\ : 前后两期因子暴露的相关性. 取时刻 :math:`t` 的因子 :math:`i` 和因子 :math:`j` 的因子暴露 :math:`\beta_{i}^{t} 、 \beta _{i}^{t}` , 在横截面上计算相关性, 方法可以选择: spearman, pearson, kendall以及factor-score correlation. 
+
+
+.. _因子截面测试脚本:
+
+因子截面测试脚本
+----------------
+
+.. attention::
+
+    本章节的应用需要一些基本的数据, 参见 :ref:`示例数据<示例数据>` 的配置.
+
+一个简单的因子截面测试脚本如下::
+
+    # coding=utf-8
+    import datetime as dt
+
+    import numpy as np
+    import pandas as pd
+
+    if __name__=='__main__':
+        import QuantStudio.api as QS
+
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})# 主目录为数据存放的文件夹路径
+        HDB.connect()
+        FT = HDB.getTable("ElementaryFactor")
+        DTs = FT.getDateTime(start_dt=dt.datetime(2017, 1, 1), end_dt=dt.datetime(2017, 12, 31))
+        DTs = QS.Tools.DateTime.getMonthLastDateTime(DTs)
+        IDs = FT.getID()
+        
+        # 创建自定义因子表
+        CFT = QS.FactorDB.CustomFT("CFT")
+        Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+        AdjClose = QS.FactorDB.Factorize(Close * AdjFactor, factor_name="复权收盘价")
+        CFT.addFactors(factor_list=[AdjClose])
+        CFT.addFactors(factor_table=FT, factor_names=["成交金额"], args={})
+        CFT.setDateTime(DTs)
+        CFT.setID(IDs)
+        
+        # 创建回测模型
+        Model = QS.BackTest.BackTestModel()
+        
+        # 添加回测模块
+        # IC 测试
+        iModule = QS.BackTest.SectionFactor.IC(factor_table=CFT)
+        iModule["测试因子"] = ["成交金额"]
+        iModule["排序方向"] = {"成交金额": "升序"}
+        iModule["价格因子"] = "复权收盘价"
+        iModule["行业因子"] = "无"
+        iModule["权重因子"] = "等权"
+        iModule["计算时点"] = DTs
+        iModule["回溯期数"] = 1
+        iModule["相关性算法"] = "spearman"
+        iModule["筛选条件"] = ""
+        iModule["滚动平均期数"] = 12
+        Model.Modules.append(iModule)
+        
+        # 运行模型
+        Model.run(dts=DTs)
+        
+        # 查看结果
+        QS.Tools.QtGUI.showOutput(Model.output())
+
+下面逐行解释这个脚本.
+
+由于 QuantStudio 在回测时会启动多个子进程, 所以主要代码需要写在::
+
+    if __name__=='__main__':
+
+之下, 这里数据从基于 HDF5 文件的因子库 HDF5DB 获得, 首先创建因子库对象, 并获取需要的一些维度信息::
+
+    HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})# 主目录为数据存放的文件夹路径
+    HDB.connect()
+    FT = HDB.getTable("ElementaryFactor")
+    DTs = FT.getDateTime(start_dt=dt.datetime(2017, 1, 1), end_dt=dt.datetime(2017, 12, 31))
+    DTs = QS.Tools.DateTime.getMonthLastDateTime(DTs)
+    IDs = FT.getID()
+
+这里我们时间段选取 2017 年一年月底序列, Tools 子模块中提供了很多功能函数, 比如这里获取月底序列调用了其 DateTime 下的 getMonthLastDateTime 函数.
+
+接着, 创建一个自定义因子表, 将用到的因子都添加到一张表里::
+
+    CFT = QS.FactorDB.CustomFT("CFT")
+    Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+    AdjClose = QS.FactorDB.Factorize(Close * AdjFactor, factor_name="复权收盘价")
+    CFT.addFactors(factor_list=[AdjClose])
+    CFT.addFactors(factor_table=FT, factor_names=["成交金额"], args={})
+    CFT.setDateTime(DTs)
+    CFT.setID(IDs)
+
+由于计算需要复权价, 首先获取收盘价和复权因子::
+
+    Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+
+接着通过一个乘法运算得到后复权价格 AdjClose, 然后将用到的所有因子添加到自定义因子表 CFT 中, 并设置时间和 ID 维度信息.
+
+数据有了之后, 便是创建回测模型, 回测模型通过子模块 BackTest 下的类 BackTestModel 实例化得到::
+
+    Model = QS.BackTest.BackTestModel()
+
+这样的创建的模型是一个空模型, 需要添加待测试的模块, 这里仅添加一个 IC 测试模块, 因子截面测试的功能模块在 BackTest.SectionFactor 下, 第一步实例化一个模块对象::
+
+    iModule = QS.BackTest.SectionFactor.IC(factor_table=CFT)
+    
+第二部设置模块的参数::
+
+    iModule["测试因子"] = ["成交金额"]
+    iModule["排序方向"] = {"成交金额": "升序"}
+    iModule["价格因子"] = "复权收盘价"
+    iModule["行业因子"] = "无"
+    iModule["权重因子"] = "等权"
+    iModule["计算时点"] = DTs
+    iModule["回溯期数"] = 1
+    iModule["相关性算法"] = "spearman"
+    iModule["筛选条件"] = ""
+    iModule["滚动平均期数"] = 12
+    Model.Modules.append(iModule)
+
+最后添加到模型中即可::
+
+    Model.Modules.append(iModule)
+
+需要测试的功能模块全部添加好之后, 即可调用模型的 run 方法运行模型测试::
+
+    Model.run(dts=DTs)
+
+run 方法需要提供待测试的时间序列, 这里使用因子表的所有时间进行测试. 测试好之后可以调用模型的 output 方法获得测试结果, 这里还使用了 Tools.QtGUI 模块下的功能函数 showOutput 来展示结果::
+
+    QS.Tools.QtGUI.showOutput(Model.output())
+
+
+API 参考
+--------
+
+.. py:module:: IC
+
+.. py:class:: IC(factor_table, name="IC", sys_args={}, **kwargs)
+    
+    IC 测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 测试因子: 待测试的因子列表, [因子名]
+            * 排序方向: 每个待测试因子先验的逻辑顺序, 降序表示因子值越大预期下期收益率越高, 而升序表示因子值越小预期下期收益率越高, dict(因子名:"降序" 或者 "升序")
+            * 价格因子: 表示证券价格数据的因子名, str
+            * 行业因子: 表示证券所属行业的因子名, str, 默认值 "无", 表示收益率不进行行业调整. 
+            * 权重因子: 计算计算行业收益率所使用的证券权重因子名, str, 默认值 "等权". 
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+            * 回溯期数: 因子值采样和收益率采样之间相隔的期数, int, 默认值 1, 即使用当期因子值和下期收益率计算 IC. 
+            * 相关性算法: IC 所使用的相关系数计算方法, str, 可选: "spearman", "pearson", "kendall", 默认值 "spearman".
+            * 筛选条件: 截面 ID 的过滤条件, str.
+            * 滚动平均期数: 计算 IC 移动平均线时所用的窗口长度, int, 默认是 12. 
+
+.. py:class:: RiskAdjustedIC(factor_table, name="风险调整的 IC", sys_args={}, **kwargs)
+    
+    风险调整的 IC 测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 测试因子: 待测试的因子列表, [因子名]
+            * 排序方向: 每个待测试因子先验的逻辑顺序, 降序表示因子值越大预期下期收益率越高, 而升序表示因子值越小预期下期收益率越高, dict(因子名:"降序" 或者 "升序")
+            * 价格因子: 表示证券价格数据的因子名, str
+            * 风险因子: 风险因子列表, [因子名]
+            * 行业因子: 表示证券所属行业的因子名, str, 默认值 "无", 表示收益率不进行行业调整. 
+            * 权重因子: 计算计算行业收益率所使用的证券权重因子名, str, 默认值 "等权". 
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+            * 回溯期数: 因子值采样和收益率采样之间相隔的期数, int, 默认值 1, 即使用当期因子值和下期收益率计算 IC. 
+            * 相关性算法: IC 所使用的相关系数计算方法, str, 可选: "spearman", "pearson", "kendall", 默认值 "spearman".
+            * 筛选条件: 截面 ID 的过滤条件, str.
+            * 滚动平均期数: 计算 IC 移动平均线时所用的窗口长度, int, 默认是 12. 
+
+.. py:class:: ICDecay(factor_table, name="IC 衰减", sys_args={}, **kwargs)
+    
+    IC 衰减测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+
+            * 测试因子: 待测试的因子, str
+            * 排序方向: 待测试因子先验的逻辑顺序, 降序表示因子值越大预期下期收益率越高, 而升序表示因子值越小预期下期收益率越高, "降序" 或者 "升序". 
+            * 价格因子: 表示证券价格数据的因子名, str
+            * 行业因子: 表示证券所属行业的因子名, str, 默认值 "无", 表示收益率不进行行业调整. 
+            * 权重因子: 计算计算行业收益率所使用的证券权重因子名, str, 默认值 "等权". 
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+            * 回溯期数: 因子值采样和收益率采样之间相隔的期数列表, [int], 默认值 [1,...12] 
+            * 相关性算法: IC 所使用的相关系数计算方法, str, 可选: "spearman", "pearson", "kendall", 默认值 "spearman".
+            * 筛选条件: 截面 ID 的过滤条件, str.
+
+
+.. py:module:: Correlation
+
+.. py:class:: SectionCorrelation(factor_table, name="因子截面相关性", sys_args={}, **kwargs)
+    
+    因子截面相关性测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 测试因子: 待测试的因子列表, [因子名]
+            * 排序方向: 每个待测试因子先验的逻辑顺序, 降序表示因子值越大预期下期收益率越高, 而升序表示因子值越小预期下期收益率越高, dict(因子名:"降序" 或者 "升序")
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+            * 相关性算法: IC 所使用的相关系数计算方法, str, 可选: "spearman", "pearson", "kendall", 默认值 "spearman".
+            * 风险表: 提供风险数据的风险表对象, None 表示不需要风险数据. 
+            * 筛选条件: 截面 ID 的过滤条件, str.
+            
+.. py:class:: FactorTurnover(factor_table, name="因子截面相关性", sys_args={}, **kwargs)
+    
+    因子截面相关性测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 测试因子: 待测试的因子列表, [因子名]
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+            * 筛选条件: 截面 ID 的过滤条件, str.
+
+
+.. py:module:: Portfolio
+
+.. py:class:: QuantilePortfolio(factor_table, name="分位数组合", sys_args={}, **kwargs)
+    
+    分位数组合测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 测试因子: 待测试的因子, str. 
+            * 排序方向: 待测试因子先验的逻辑顺序, 降序表示因子值越大预期下期收益率越高, 第一组即是因子值最大的一组；而升序表示因子值越小预期下期收益率越高, 第一组即是因子值最小的一组, "降序" 或者 "升序"
+            * 分组数: 划分出的分位数组合的数量, int, 默认为 10 组. 
+            * 价格因子: 表示证券价格数据的因子名, str
+            * 行业因子: 表示证券所属行业的因子名, str, 默认值 "无", 表示收益率不进行行业调整. 
+            * 权重因子: 计算计算行业收益率所使用的证券权重因子名, str, 默认值 "等权". 
+            * 调仓时点: 组合再平衡的时点序列, 只在该序列内的时点进行组合再平衡, [datetime.datetime], 默认值 [] 表示所有时点均再平衡
+            * 市场组合: 市场组合的截面 ID 的过滤条件, str.
+            * 筛选条件: 截面 ID 的过滤条件, str.
+            * 随机微扰: 对于原始因子值是否添加微小的随机数, 多用于数值有大量重复的因子, bool, 默认 False
+
+
+.. py:module:: Distribution
+
+.. py:class:: IndustryDistribution(factor_table, name="因子值行业分布", sys_args={}, **kwargs)
+    
+    因子值行业分布测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 测试因子: 待测试的因子, [因子名]. 
+            * 行业因子: 表示股票所属行业的因子, str. 
+            * 阈值: 用于设定因子值分布计算所用的阈值, str, 可选: "平均值"、"中位数"、"25%分位数"、"75%分位数", 默认为 "中位数". 
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+            * 筛选条件: 截面 ID 的过滤条件, str.
+
+
+.. py:module:: ReturnDecomposition
+
+.. py:class:: FamaMacBethRegression(factor_table, name="Fama-MacBeth 回归", sys_args={}, **kwargs)
+    
+    Fama-MacBeth 回归测试模块, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 测试因子: 1. 测试因子: 待测试的因子, [因子名]
+            * 价格因子: 表示证券价格数据的因子名, str
+            * 行业因子: 表示证券所属行业的因子名, str, 默认值 "无", 表示收益率不进行行业调整
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+            * 滚动平均期数: 计算收益率移动平均线时所用的窗口长度, int, 默认是 12 
+            * 筛选条件: 截面 ID 的过滤条件, str

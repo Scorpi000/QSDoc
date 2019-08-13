@@ -1,0 +1,99 @@
+.. _回测模型:
+
+回测模型
+========
+
+QuantStudio 的一个主要功能就是对各种各样的模型使用历史数据进行回测, 比如交易策略, 绩效归因, 因子选股能力等等. QuantStudio 提供了一个统一的框架来回测这些模型. 回测功能集中在 BackTest 子模块中.
+
+回测模型逻辑上比较简单, 就是沿着一个时间序列进行遍历, 在每个时点进行一些计算, 然后整理计算的结果形成回测报告.
+
+
+API 参考
+--------
+
+.. py:module:: BackTestModel
+
+.. py:class:: BaseModule(name, sys_args={}, config_file=None, **kwargs)
+
+    回测模块基类, 不能实例化对象, 所有回测模块都继承自此类.
+
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    :param str config_file: 对象配置文件地址
+    
+    .. py:attribute:: Name
+    
+        模块名称, str
+    
+    .. py:attribute:: Model
+    
+        模块所属的回测模型对象, None 表示该模块还未添加到模型中
+
+    .. py:method:: output(recalculate=False)
+
+        计算并输出该模块的结果集
+        
+        :param bool recalculate: 是否重新计算结果, False 是返回上次计算的结果
+        :return: 结果集
+        :rtype: dict
+    
+    .. py:method:: genHTMLReport(file_path)
+    
+        生成模块的 HTML 格式的结果报告
+        
+        :param str file_path: 结果报告保存的文件地址
+        :return: ErrorCode
+        :rtype: int
+
+
+.. py:class:: BackTestModel(sys_args={}, config_file=None, **kwargs)
+
+    回测模型
+
+    :param dict sys_args: 对象参数
+    :param str config_file: 对象配置文件地址
+    
+    .. py:attribute:: Modules
+    
+        已经添加到模型中的模块列表, list(BaseModule)
+    
+    .. py:attribute:: DateTime
+    
+        当前的时点, 在回测过程中, 该属性值会从时间序列起始时点移动到终止时点, datetime.datetime
+
+    .. py:attribute:: DateTimeIndex
+        
+        当前时间点在整个回测时间序列中的位置索引, int
+    
+    .. py:attribute:: DateTimeSeries
+    
+        截止当前的时间点序列, [datetime.datetime]
+
+    .. py:attribute:: DateIndexSeries
+        
+        截止到当前时点蕴含的日期序列在时间点序列中的索引, Series(int, index=[datetime.date])
+    
+    .. py:method:: run(dts, subprocess_num=0)
+        
+        运行回测模型
+        
+        :param list(datetime.datetime) dts: 回测的时间序列
+        :param int subprocess_num: 子进程数, 模块计算时开启的额外子进程个数
+        :return: ErrorCode
+        :rtype: int
+    
+    .. py:method:: output(recalculate=False)
+
+        计算并输出回测的结果集
+        
+        :param bool recalculate: 是否重新计算结果, False 是返回上次计算的结果
+        :return: 结果集
+        :rtype: dict
+    
+    .. py:method:: genHTMLReport(file_path)
+    
+        生成 HTML 格式的结果报告
+        
+        :param str file_path: 结果报告保存的文件地址
+        :return: ErrorCode
+        :rtype: int

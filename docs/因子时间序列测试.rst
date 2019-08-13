@@ -1,0 +1,74 @@
+.. _因子时间序列测试:
+
+因子时间序列测试
+================
+
+时间序列测试模型
+----------------
+
+符号说明
+````````
+
+用变量 :math:`i,1\le i\le N` 标识证券, :math:`t,1\le t\le T` 表示时间, :math:`j,1\le j\le M` 表示因子. 
+
+* :math:`F_{t,j}`: 时间序列因子 :math:`j` 在 :math:`t` 时刻的取值, :math:`\mathbf{F}=\left(F_{t,j}\right)_{T\times M}` 为因子矩阵, :math:`\mathbf{F}_{:,j}=\left(F_{t,j}\right)_{T\times 1}` 为因子的时间序列, :math:`\mathbf{F}_{t,:}=\left(F_{t,j}\right)_{M\times 1}` 为因子截面向量.
+* :math:`P_{t,i}`: 证券 :math:`i` 在 :math:`t` 时刻的价格, :math:`\mathbf{P}=\left(P_{t,i}\right)_{T\times N}` 为价格矩阵, :math:`\mathbf{P}_{:,i}=\left(P_{t,i}\right)_{T\times 1}` 为价格的时间序列, :math:`\mathbf{P}_{t,:}=\left(P_{t,i}\right)_{N\times 1}` 为价格的证券截面向量.
+* :math:`R_{t,i}`: :math:`[t-1,t]` 时段证券 :math:`i` 的收益率, :math:`\mathbf{R}=\left(R_{t,i}\right)_{T\times N}` 为收益率矩阵, :math:`\mathbf{R}_{:,i}=\left(R_{t,i}\right)_{T\times 1}` 为收益率的时间序列, :math:`\mathbf{R}_{t,:}=\left(R_{t,i}\right)_{N\times 1}` 为收益率的证券截面向量.
+* :math:`R_{t,i}(\tau)`: :math:`[t-\tau,t]` 时段证券 :math:`i` 的收益率, :math:`R_{t,i}(\tau)=R_{t,i}(1)`, :math:`\mathbf{R}(\tau)=\left(R_{t,i}(\tau)\right)_{T\times N}` 为收益率矩阵, :math:`\mathbf{R}_{:,i}(\tau)=\left(R_{t,i}(\tau)\right)_{T\times 1}` 为收益率的时间序列, :math:`\mathbf{R}_{t,:}(\tau)=\left(R_{t,i}(\tau)\right)_{N\times 1}` 为收益率的证券截面向量.
+
+收益率的计算考虑三种方法:
+
+* 简单收益率:
+
+    .. math::
+        
+        R_{t,i}(\tau) = \frac{P_{t,i}}{P_{t-\tau,i}}-1
+
+* 对数收益率:
+
+    .. math::
+        
+        R_{t,i}(\tau) = \operatorname{log}P_{t,i} - \operatorname{log}P_{t-\tau,i}
+
+* 价格变化量:
+
+    .. math::
+        
+        R_{t,i}(\tau) = P_{t,i} - P_{t-\tau,i}
+
+
+
+时间序列相关性
+``````````````
+
+往期因子值和当期收益率的相关性, 设预测期数为 :math:`\tau_p`, 因子的滞后期数为 :math:`\tau_l`:
+
+    .. math::
+
+        \rho_{i,j}=\frac{\sum\limits_{t=1}^{T}\left(R_{t,i}(\tau_p) - \bar{R}_{i}(\tau_p)\right)\cdot\left(F_{t-\tau_p-\tau_l,j} - \bar{F}_{j}\right)}{\sqrt{\sum\limits_{t=1}^T\left(R_{t,i}(\tau_p) - \bar{R}_{i}(\tau_p)\right)^2\cdot\sum\limits_{t=1}^T\left(F_{t-\tau_p-\tau_l,j} - \bar{F}_{t-\tau_p-\tau_l,j}\right)^2}}
+
+其中: 
+
+    .. math::
+
+        \bar{R}_{i}(\tau_p)=\frac{1}{T}\sum\limits_{t=1}^{T}{R_{t,i}(\tau)}
+
+    .. math::
+
+        \bar{F}_{j}=\frac{1}{T}\sum\limits_{t=1}^{T}{F_{t-\tau_p-\tau_l,i}}
+
+
+回归分析
+````````
+
+以当期收益率作为因变量, 往期因子值作为自变量进行回归, 设预测期数为 :math:`\tau_p`, 因子的滞后期数为 :math:`\tau_l`:
+
+    .. math::
+
+        R_{t,i}(\tau_p) = c_i+\sum\limits_{j=1}^{M}\beta_j\cdot F_{t-\tau_p-\tau_l,j}+\varepsilon_{t,i}
+
+    
+收益率的差异性
+``````````````
+
+考察不同因子取值的条件下, 证券收益率的差异性. 设预测期数为 :math:`\tau_p`, 因子的滞后期数为 :math:`\tau_l`. 对因子的时间序列 :math:`\mathbf{F}_{:,j}` 进行排序, 分成 K 组, 每一组对应的证券收益率形成一个样本, 比较 K 个样本之间的差异性. 比如利用 t 检验等统计检验方法.

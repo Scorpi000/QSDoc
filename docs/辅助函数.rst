@@ -1,0 +1,709 @@
+﻿辅助函数
+========
+
+以下函数属于 Tools 子模块, 是其他功能模块共享和调用的辅助函数.
+
+以下示例默认导入了 datetime 和 QuantStudio 模块::
+    
+    >>>import QuantStudio.api as QS
+
+
+日期时间
+````````
+
+.. py:module:: DateTime
+
+.. py:function:: getMonthLastDateTime(dts)
+
+    获取给定时间序列的每月最后一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每月最后一个时点的序列
+    :rtype: list(datetime.datetime)
+
+::
+    
+    >>>import datetime as dt
+    >>>QS.Tools.DateTime.getMonthLastDateTime([dt.datetime(2001,1,1),dt.datetime(2014,3,2),dt.datetime(2001,1,2),dt.datetime(2016,10,31),dt.datetime(2016,10,4)])
+    [datetime.datetime(2001, 1, 2, 0, 0), datetime.datetime(2014, 3, 2, 0, 0), datetime.datetime(2016, 10, 31, 0, 0)]
+
+.. py:function:: getMonthMiddleDateTime(dts, middle_day=15)
+
+    获取给定时间序列的每月中间一个时点的序列, 每月小于等于 middle_day(默认 15) 的最后一天的最后一个时点
+
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :param int middle_day: 作为每月中间的分隔日, 默认值 15
+    :return: 每月中间一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getMonthFirstDateTime(dts)
+
+    获取给定时间序列的每月第一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每月第一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getWeekLastDateTime(dts)
+
+    获取给定时间序列的每周最后一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每周最后一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getWeekFirstDateTime(dts)
+
+    获取给定时间序列的每周第一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每周第一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getYearLastDateTime(dts)
+
+    获取给定时间序列的每年最后一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每年最后一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getYearFirstDateTime(dts)
+
+    获取给定时间序列的每年第一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每年第一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getQuarterLastDateTime(dts)
+
+    获取给定时间序列的每季度最后一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每季度最后一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getQuarterFirstDateTime(dts)
+
+    获取给定时间序列的每季度第一个时点的序列
+    
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每季度第一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getFinancialQuarterLastDateTime(dts)
+
+    获取给定时间序列的每财报季度最后一个时点的序列，上年 11 月初至当年 4 月底为第一季度，5 月初至 8 月底为第二季度，9 月初至 10 月底为第三季度
+
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每财报季度最后一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getFinancialQuarterFirstDateTime(dts)
+
+    获取给定时间序列的每财报季度第一个时点的序列，上年 11 月初至当年 4 月底为第一季度，5 月初至 8 月底为第二季度，9 月初至 10 月底为第三季度
+
+    :param list(datetime.datetime) dts: 给定的时间序列
+    :return: 每财报季度第一个时点的序列
+    :rtype: list(datetime.datetime)
+
+.. py:function:: getDateSeries(start_date, end_date)
+
+    获取给定的起始日和终止日之间连续的自然日序列(包括起始日和终止日)
+    
+    :param datetime.date start_date: 给定的起始日
+    :param datetime.date end_date: 给定的终止日
+    :return: 自然日序列
+    :rtype: list(datetime.date)
+
+.. py:function:: getTimeSeries(start_time, end_time, timedelta)
+
+    获取日内的时间序列
+    
+    :param datetime.time start_time: 给定的起始时间
+    :param datetime.time end_time: 给定的终止时间
+    :param datetime.timedelta timedelta: 时间间隔
+    :return: 日内时间序列
+    :rtype: list(datetime.time)
+
+.. py:function:: getDateTimeSeries(start_dt, end_dt, timedelta)
+
+    获取时间序列
+    
+    :param datetime.datetime start_dt: 给定的起始时点
+    :param datetime.datetime end_dt: 给定的终止时间
+    :param datetime.timedelta timedelta: 时间间隔
+    :return: 时间序列
+    :rtype: list(datetime.datetime)
+
+
+数学函数
+````````
+
+.. py:module:: Math
+
+.. py:function:: CartesianProduct(data)
+
+    计算若干向量的笛卡尔积
+    
+    :param list(list) data: 给定的若干个向量
+    :return: 笛卡尔积
+    :rtype: list(list)
+    
+::
+
+    >>>QS.Tools.Math.CartesianProduct([[1,2,3],['a','b']])
+    [[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b'], [3, 'a'], [3, 'b']]
+
+
+文件操作
+````````
+
+.. py:module:: File
+
+.. py:function:: clearDir(dir_path)
+
+    清空给定目录下的所有内容
+    
+    :param str dir_path: 给定的目录路径
+    :return: 没有成功删除的文件或文件夹数目
+    :rtype: int
+
+.. py:function:: listDirDir(dir_path='.')
+
+    获取给定目录下所有文件夹的名称列表
+    
+    :param str dir_path: 给定的目录路径
+    :return: 文件夹名称列表
+    :rtype: list(str)
+
+.. py:function:: listDirFile(dir_path='.', suffix='csv')
+    
+    获取给定目录下给定后缀的文件名称列表
+    
+    :param str dir_path: 给定的目录路径
+    :param str suffix: 给定的后缀, 如果为 None 表示获取目录下所有文件名称列表
+    :return: 文件名称列表
+    :rtype: list(str)
+
+.. py:function:: copyDir(source_dir, target_pos, if_exist='replace')
+
+    复制源文件夹到指定位置, 如果目标位置下该文件夹已经存在，则根据 if_exist 参数进行操作
+    
+    :param str source_dir: 源文件夹路径
+    :param str target_pos: 目标位置路径
+    :param str if_exist: 可选："replace", "skip", "replace" 表示覆盖, "skip" 表示放弃复制操作
+    :return: ErrorCode
+    :rtype: int
+
+.. py:function:: detectFileEncoding(file_path, big_file=False, size=None)
+    
+    猜测文件的编码格式
+    
+    :param str file_path: 待检测的目标文件路径
+    :param bool big_file: 如果是 False, 将读取整个文件内容进行分析, 否则读取部分内容分析
+    :param int size: big_file 为 True 时读取的文件字节数
+    :return: {'confidence': 置信度, 'encoding': 编码格式}, 例如: {'confidence': 0.99, 'encoding': 'GB2312'}
+    :rtype: dict
+
+.. py:function:: readCSV2Pandas(filepath_or_buffer, detect_file_encoding=False, **other_args)
+
+    支持中文路径的读取 csv 文件为 pandas 对象的函数, 除了 detect_file_encoding 以外其他输入参数同 pandas.read_csv 函数完全一致
+
+    :param bool detect_file_encoding: 如果是 True, 将自动检测文件的编码格式
+    :return: 同 pandas.read_csv 函数
+
+
+投资策略
+````````
+
+.. py:module:: Strategy
+
+.. py:function:: calcWealthAfterTrade(p_holding, p_target, wealth, transfee_rate, epsilon=1e-6)
+    
+    计算在考虑交易费且无交易限制假设下投资组合交易后的财富值, 使用迭代法求解方程:
+    
+    .. math::
+        x=wealth-{\left\| x\cdot p_{target}-wealth\cdot p_{holding} \right\|_{1}}
+    
+    通过压缩映射原理可以证明迭代一定收敛
+    
+    :param Series p_holding: 当前持有的投资组合, Series(权重, index=[ID])
+    :param Series p_target: 目标投资组合, Series(权重, index=[ID])
+    :param float wealth: 当前财富值
+    :param float transfee_rate: 交易费率
+    :param float epsilon: 确认收敛停止迭代的误差界
+    :return: 交易后的财富值
+    :rtype: float
+
+.. py:function:: calcYieldSeq(wealth_seq, init_wealth=None)
+
+    给定净值或价格序列, 计算收益率序列
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float init_wealth: 初始净值或价格, 若为 None 使用 wealth_seq 的第一个元素
+    :return: 收益率序列
+    :rtype: array
+
+.. py:function:: calcWealthSeq(yield_seq, init_wealth=None)
+
+    给定收益率序列, 计算净值序列
+    
+    :param array yield_seq: 收益率序列
+    :param float init_wealth: 初始净值或价格, 如果不为 None, 则返回的序列比 yield_seq 多一个元素, 在初始位置添加 init_wealth
+    :return: 净值序列
+    :rtype: array
+
+::
+
+    >>>QS.Tools.Strategy.calcWealthSeq(np.array([0.1,0.04]), init_wealth=1)
+    array([ 1.   ,  1.1  ,  1.144])
+    >>>QS.Tools.Strategy.calcWealthSeq(np.array([0.1,0.04]), init_wealth=None)
+    array([ 1.1  ,  1.144])
+
+.. py:function:: calcAnnualYield(wealth_seq, num_per_year=252, start_date=None, end_date=None)
+
+    给定净值或价格序列, 计算年化收益率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float num_per_year: 每年的期数
+    :param datetime.date start_date: 初始日期
+    :param datetime.date end_date: 终止日期, 如果初始日期和终止日期均不为 None, 则使用这两个日期估计 num_per_year
+    :return: 年化收益率
+    :rtype: float
+
+.. py:function:: calcAnnualVolatility(wealth_seq, num_per_year=252, start_date=None, end_date=None)
+
+    给定净值或价格序列, 计算年化波动率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float num_per_year: 每年的期数
+    :param datetime.date start_date: 初始日期
+    :param datetime.date end_date: 终止日期, 如果初始日期和终止日期均不为 None, 则使用这两个日期估计 num_per_year
+    :return: 年化波动率
+    :rtype: float
+
+.. py:function:: calcRollingAnnualYieldSeq(wealth_seq, window=252, min_window=252, num_per_year=252)
+
+    给定净值或价格序列, 滚动窗口方式计算年化收益率序列
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int window: 滚动窗口长度
+    :param int min_window: 可以执行计算的最小窗口长度, 如果回溯日期数小于该参数, 则填充 NaN
+    :param float num_per_year: 每年的期数
+    :return: 年化收益率序列
+    :rtype: array
+
+.. py:function:: calcRollingAnnualVolatilitySeq(wealth_seq, window=252, min_window=252, num_per_year=252)
+
+    给定净值或价格序列, 滚动窗口方式计算年化波动率序列
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int window: 滚动窗口长度
+    :param int min_window: 可以执行计算的最小窗口长度, 如果回溯日期数小于该参数, 则填充 NaN
+    :param float num_per_year: 每年的期数
+    :return: 年化波动率序列
+    :rtype: array
+
+.. py:function:: calcExpandingAnnualYieldSeq(wealth_seq, min_window=252, num_per_year=252)
+
+    给定净值或价格序列, 扩张窗口方式计算年化收益率序列
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int min_window: 可以执行计算的最小窗口长度, 如果回溯日期数小于该参数, 则填充 NaN
+    :param float num_per_year: 每年的期数
+    :return: 年化收益率序列
+    :rtype: array
+
+.. py:function:: calcExpandingAnnualVolatilitySeq(wealth_seq, min_window=252, num_per_year=252)
+
+    给定净值或价格序列, 扩张窗口方式计算年化波动率序列
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int window: 滚动窗口长度
+    :param int min_window: 可以执行计算的最小窗口长度, 如果回溯日期数小于该参数, 则填充 NaN
+    :param float num_per_year: 每年的期数
+    :return: 年化波动率序列
+    :rtype: array
+
+.. py:function:: calcBeta(wealth_seq, market_wealth_seq)
+
+    给定净值或价格序列, 计算 :math:`\beta`
+    
+    :param array wealth_seq: 净值或价格序列
+    :param array market_wealth_seq: 市场净值或价格序列
+    :return: :math:`\beta`
+    :rtype: float
+
+.. py:function:: calcLPM(wealth_seq, threshold=0.0, order=2)
+
+    给定净值或价格序列, 计算收益率的 Lower Partial Moment
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float threshold: 收益率下限阈值
+    :param int order: 矩的阶数
+    :return: Lower Partial Moment
+    :rtype: float
+
+.. py:function:: calcHPM(wealth_seq, threshold=0.0, order=2)
+
+    给定净值或价格序列, 计算收益率的 Higher Partial Moment
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float threshold: 收益率下限阈值
+    :param int order: 矩的阶数
+    :return: Higher Partial Moment
+    :rtype: float
+
+.. py:function:: calcSharpeRatio(wealth_seq, risk_free_rate=0.0, expected_return=None)
+
+    给定净值或价格序列, 计算 Sharpe 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Sharpe 比率
+    :rtype: float
+
+.. py:function:: calcAdjustedSharpeRatio(wealth_seq, risk_free_rate=0.0, expected_return=None)
+
+    给定净值或价格序列, 计算调整的 Sharpe 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: 调整的 Sharpe 比率
+    :rtype: float
+
+.. py:function:: calcTreynorRatio(wealth_seq, market_wealth_seq, risk_free_rate=0.0, expected_return=None)
+
+    给定净值或价格序列，计算 Treynor 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param array market_wealth_seq: 市场净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Treynor 比率
+    :rtype: float
+
+.. py:function:: calcInformationRatio(wealth_seq, benchmark_wealth_seq)
+
+    给定净值或价格序列, 计算信息比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param array benchmark_wealth_seq: 基准净值或价格序列
+    :return: 信息比率
+    :rtype: float
+
+.. py:function:: calcModiglianiRatio(wealth_seq, benchmark_wealth_seq, risk_free_rate=0.0, expected_return=None)
+
+    给定净值或价格序列, 计算 Modigliani 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param array benchmark_wealth_seq: 基准净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Modigliani 比率
+    :rtype: float
+
+.. py:function:: calcSortinoRatio(wealth_seq, risk_free_rate=0.0, target_return=0.0, expected_return=None)
+
+    给定净值或价格序列，计算 Sortino 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float target_return: 目标收益率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Sortino 比率
+    :rtype: float
+
+.. py:function:: calcOmegaRatio(wealth_seq, risk_free_rate=0.0, target_return=0.0, expected_return=None)
+
+    给定净值或价格序列, 计算 Omega 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float target_return: 目标收益率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Omega 比率
+    :rtype: float
+
+.. py:function:: calcKappaThreeRatio(wealth_seq, risk_free_rate=0.0, target_return=0.0, expected_return=None)
+
+    给定净值或价格序列, 计算 Kappa3 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float target_return: 目标收益率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Kappa3 比率
+    :rtype: float
+
+.. py:function:: calcGainLossRatio(wealth_seq, target_return=0.0)
+
+    给定净值或价格序列, 计算盈亏比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float target_return: 目标收益率
+    :return: 盈亏比率
+    :rtype: float
+
+.. py:function:: calcUpsidePotentialRatio(wealth_seq, target_return=0.0)
+
+    给定净值或价格序列, 计算 Upside Potential Ratio
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float target_return: 目标收益率
+    :return: Upside Potential Ratio
+    :rtype: float
+
+.. py:function:: calcVaR(wealth_seq, alpha=0.05, method="Historical")
+
+    给定净值或价格序列, 计算 VaR 和 CVaR
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float alpha: 置信水平
+    :param str method: 计算方法, 可选 "Historical", "Norm" 或者 "Cornish-Fisher"
+    :return: (VaR, CVaR)
+    :rtype: tuple
+
+.. py:function:: calcUpPeriod(wealth_seq)
+
+    给定净值或价格序列, 计算净值或价格上升区间
+    
+    :param array wealth_seq: 净值或价格序列
+    :return: (净值或价格上升区间, 净值或价格上升索引位置), 元素个数为偶数, 两两组成一个区间
+    :rtype: tuple
+
+::
+
+    >>>a = np.array([ 3.327461, 1.869487, 2.731358, 3.764781, 4.036605, 2.613911, 4.054651,  4.6229, 2.696089, 0.639644])
+    >>>QS.Tools.Strategy.calcUpPeriod(a)
+    (array([1.869487, 4.036605, 2.613911, 4.6229  ]), array([1, 4, 5, 7]))
+
+.. py:function:: calcDownPeriod(wealth_seq)
+
+    给定净值或价格序列, 计算净值或价格下降区间
+    
+    :param array wealth_seq: 净值或价格序列
+    :return: (净值或价格下降区间, 净值或价格下降索引位置), 元素个数为偶数, 两两组成一个区间
+    :rtype: tuple
+
+::
+
+    >>>a = np.array([ 3.327461, 1.869487, 2.731358, 3.764781, 4.036605, 2.613911, 4.054651,  4.6229, 2.696089, 0.639644])
+    >>>QS.Tools.Strategy.calcDownPeriod(a)
+    (array([3.327461, 1.869487, 4.036605, 2.613911, 4.6229  , 0.639644]), array([0, 1, 4, 5, 7, 9]))
+
+.. py:function:: calcDrawdown(wealth_seq)
+
+    给定净值或价格序列, 计算回撤序列
+    
+    :param array wealth_seq: 净值或价格序列
+    :return: (最大回撤(float), 最大回撤开始位置(int), 最大回撤结束位置(int), 回撤序列(array))
+    :rtype: tuple
+
+::
+
+    >>>a = np.array([ 3.327461, 1.869487, 2.731358, 3.764781, 4.036605, 2.613911, 4.054651,  4.6229, 2.696089, 0.639644])
+    >>>QS.Tools.Strategy.calcDrawdown(a)
+    (-0.86163576975491574,
+     7,
+     9,
+     array([ 0.        , -0.43816411, -0.1791465 ,  0.        ,  0.        ,
+           -0.35244816,  0.        ,  0.        , -0.41679703, -0.86163577]))
+
+.. py:function:: calcMaxDrawdownRate(wealth_seq)
+
+    给定净值或价格序列, 计算最大回撤
+    
+    :param array wealth_seq: 净值或价格序列
+    :return: (最大回撤(float), 最大回撤开始位置(int), 最大回撤结束位置(int))
+    :rtype: tuple
+
+.. py:function:: calcMaxDrawdownRateEx(wealth_seq)
+
+    给定净值或价格序列, 计算最大回撤, 计算速度比 :py:func:`calcMaxDrawdownRate` 快.
+    
+    :param array wealth_seq: 净值或价格序列
+    :return: (最大回撤(float), 最大回撤开始位置(int), 最大回撤结束位置(int))
+    :rtype: tuple
+
+.. py:function:: calcMaxDrawdownRateExEx(wealth_seq)
+
+    给定净值或价格序列, 计算最大回撤, 计算速度比 :py:func:`calcMaxDrawdownRateEx` 快.
+    
+    :param array wealth_seq: 净值或价格序列
+    :return: (最大回撤(float), 最大回撤开始位置(int), 最大回撤结束位置(int))
+    :rtype: tuple
+
+.. py:function:: calcPeriodDrawdown(wealth_seq, tau)
+
+    给定净值或价格序列和期限, 计算给定期限的最大回撤
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int tau: 期限长度
+    :return: 最大回撤
+    :rtype: float
+
+.. py:function:: calcAverageDrawdown(wealth_seq, periods)
+
+    给定净值或价格序列和期限, 计算给定期限内的平均回撤
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int periods: 期限长度
+    :return: 平均回撤率
+    :rtype: float
+
+.. py:function:: calcAverageDrawdownSquared(wealth_seq, periods)
+
+    给定净值或价格序列和期限, 计算给定期限内的平均回撤平方
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int periods: 期限长度
+    :return: 平均回撤平方
+    :rtype: float
+
+.. py:function:: calcCalmarRatio(wealth_seq, risk_free_rate=0.0, expected_return=None)
+
+    给定净值或价格序列, 计算 Calmar 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Calmar 比率
+    :rtype: float
+
+.. py:function:: calcSterlingRatio(wealth_seq, periods, risk_free_rate=0.0, expected_return=None)
+
+    给定净值或价格序列和期限, 计算 Sterling 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int periods: 期限长度
+    :param float risk_free_rate: 无风险利率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Sterling 比率
+    :rtype: float
+    
+.. py:function:: calcBurkeRatio(wealth_seq, periods, risk_free_rate=0.0, expected_return=None)
+
+    给定净值或价格序列和期限, 计算 Burke 比率
+    
+    :param array wealth_seq: 净值或价格序列
+    :param int periods: 期限长度
+    :param float risk_free_rate: 无风险利率
+    :param float expected_return: 预期收益率, 如果为 None 则使用 wealth_seq 导出的收益率序列均值
+    :return: Burke 比率
+    :rtype: float
+
+.. py:function:: calcTMModel(wealth_seq, market_wealth_seq, risk_free_rate=0.0)
+
+    给定净值或价格序列, 使用 T-M 二项式模型, 评价策略的择时能力和选股能力
+    
+    :param array wealth_seq: 净值或价格序列
+    :param array market_wealth_seq: 市场净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :return: 回归系数, (:math:`\alpha` , :math:`\beta`, :math:`\beta^2`)
+    :rtype: tuple
+
+.. py:function:: calcHMModel(wealth_seq, market_wealth_seq, risk_free_rate=0.0)
+
+    给定净值或价格序列, 使用 H-M 双贝塔模型, 评价策略的择时能力和选股能力
+    
+    :param array wealth_seq: 净值或价格序列
+    :param array market_wealth_seq: 市场净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :return: 回归系数, (:math:`\alpha` , :math:`\beta`, :math:`\beta^+`)
+    :rtype: tuple
+
+.. py:function:: calcCLModel(wealth_seq, market_wealth_seq, risk_free_rate=0.0)
+
+    给定净值或价格序列, 使用 C-L 模型, 评价策略的择时能力和选股能力
+    
+    :param array wealth_seq: 净值或价格序列
+    :param array market_wealth_seq: 市场净值或价格序列
+    :param float risk_free_rate: 无风险利率
+    :return: 回归系数, (:math:`\alpha` , :math:`\beta^-`, :math:`\beta^+`)
+    :rtype: tuple
+
+.. py:function:: genRandomPortfolio(ids, target_num=20, weight=None)
+
+    生成随机投资组合
+    
+    :param list(str) ids: ID 列表
+    :param int target_num: 目标数量
+    :param Series weight: 权重数据, Series(权重, index=ids), 为 None 则等权
+    :return: 投资组合, Series(权重, index=[ID])
+    :rtype: Series
+
+.. py:function:: genPortfolioByFiltration(factor_data, ascending=False, target_num=20, target_quantile=0.1, weight=None)
+
+    以筛选的方式形成投资组合
+
+    :param Series factor_data: 因子数据, Series(因子值, index=[ID])
+    :param bool ascending: 是否升序排列
+    :param int target_num: 目标最大 ID 数量
+    :param float target_quantile: 目标选择的百分比
+    :param Series weight: 权重数据, Series(权重, index=ids), 为 None 则等权
+    :return: 投资组合, Series(权重, index=[ID])
+    :rtype: Series
+
+
+GUI
+```
+
+.. py:module:: QtGUI
+
+.. py:function:: showOutput(output, plot_engine="matplotlib")
+    
+    以 GUI 的方式查看数据集.
+    
+    :param dict output: 数据集, 嵌套的字典, 树状结构, 叶节点是 DataFrame, 回测模型或者回测模块方法 output 的返回值即是此种结构, 比如:
+    
+    ::
+        
+        TestData = {"Bar1": {"a": {"a1": pd.DataFrame(np.random.rand(11,3), columns=['b','c','d']),
+                                   "a2": pd.DataFrame(np.random.rand(10,2))},
+                             "b": pd.DataFrame(['a']*150, columns=['c'])},
+                    "Bar2": pd.DataFrame(np.random.randn(3,2), index=["b1", "b2", "b3"])}
+    
+    :param str plot_engine: 绘图所用的模块, 可选: "matplotlib", "plotly"
+    :return: None
+    :rtype: None
+
+.. py:function:: showFactorDB(fdb)
+    
+    以 GUI 的方式查看因子库.
+    
+    :param FactorDB fdb: 因子库对象
+    :return: None
+    :rtype: None
+
+.. py:function:: showFactor(factor)
+    
+    以 GUI 的方式查看因子数据.
+    
+    :param Factor factor: 因子对象
+    :return: None
+    :rtype: None
+
+.. py:function:: setDateTime(dts=[], dates=[], times=[], ft=None)
+    
+    以 GUI 的方式设置日期时间
+    
+    :param list(datetime.datetime) dts: 初始的时间点序列
+    :param list(datetime.date) dates: 初始的日期序列
+    :param list(datetime.time) times: 初始的时间序列
+    :param FactorTable ft: 因子表对象
+    :return: (新的时间点序列, 新的日期序列, 新的时间序列)
+    :rtype: (list(datetime.datetime), list(datetime.date), list(datetime.time))
+
+.. py:function:: setID(ids=[], ft=None)
+
+    以 GUI 的方式设置 ID
+    
+    :param list(str) ids: 初始的 ID 序列
+    :param FactorTable ft: 因子表对象
+    :return: 新的 ID 序列
+    :rtype: list(str)

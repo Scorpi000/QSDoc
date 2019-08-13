@@ -1,0 +1,797 @@
+组合优化
+========
+
+组合构建本身并不引入新的资产, 也没有对收益率的预测产生更新的观点, 它的核心是投资的分散化和风险的控制. 最早的组合构建可以追溯到上世纪 50 年代的 Markowiz 均值方差理论.
+
+
+优化模型
+--------
+
+大多数的组合构建最终都归结为满足一定约束条件的最优化问题. 不同的组合构建问题的优化目标各不一样, 但常见的约束条件基本属于以下的范畴. 
+
+.. _约束条件:
+
+约束条件
+````````
+
+* 权重约束条件
+
+    .. math::
+        \mathbf{a}\le\mathbf{w}-\mathbf{w}_b\le\mathbf{b}
+
+其中, :math:`\mathbf{w}_b` 是基准权重向量, 如果 :math:`\mathbf{w}_b=\mathbf{0}` 表示对绝对权重的限制, 否则表示对相对权重的约束, :math:`\mathbf{a}` 是权重约束下限, :math:`\mathbf{b}` 是权重约束上限, 比如 :math:`\mathbf{w}\ge \mathbf{0}` 表示限制为多头投资. 
+
+* 预算约束条件
+
+    .. math::
+         \mathbf{1}^T\cdot\mathbf{w}=a
+
+其中, :math:`\mathbf{1}` 是全 1 向量, :math:`a` 是总权重, 比如 :math:`\mathbf{1}^T\cdot\mathbf{w}=1` 表示限制为全额投资. 
+
+* 因子暴露约束条件
+
+    .. math::
+         \mathbf{x}^T\cdot\left(\mathbf{w}-\mathbf{w}_b\right)=a
+
+其中, :math:`\mathbf{x}` 是因子暴露向量, :math:`\mathbf{w}_b` 是基准权重向量, :math:`a` 是组合相对于基准的超额因子暴露, 比如 :math:`\mathbf{x}^T\cdot \left(\mathbf{w}-\mathbf{w}_b\right)=0` 表示风格中性. 
+
+* 波动率约束条件
+
+    .. math::
+         \left(\mathbf{w}-\mathbf{w}_b\right)^T\cdot \mathbf{\Sigma}\cdot \left(\mathbf{w}-\mathbf{w}_b\right)\le \sigma^2
+
+其中, :math:`\mathbf{\Sigma}` 是收益率的预期协方差矩阵, :math:`\mathbf{w}_b` 是基准权重向量, :math:`\sigma` 是组合相对于基准的跟踪误差限制. 如果 :math:`\mathbf{w}_b=\mathbf{0}` 则是对于多头波动率的控制. 
+
+* 换手率约束条件
+
+    .. math::
+        \begin{align}
+            & \sum\limits_{i=1}^n{\left| {{w}_{i}}-{{w}_{0i}} \right|}\le a \\
+            & \sum\limits_{i=1}^n{\left( {{w}_{i}}-{{w}_{0i}} \right)^{+}}\le a \\
+            & \sum\limits_{i=1}^n{\left( {{w}_{i}}-{{w}_{0i}} \right)^{-}}\le a \\
+            & A_i\cdot\left|w_i-w_{0i}\right|\le a_i \\
+            & A_i\cdot\left(w_i-w_{0i}\right)^+\le a_i \\
+            & A_i\cdot\left(w_i-w_{0i}\right)^-\le a_i \\
+        \end{align}
+
+其中, 前三个条件是总换手约束、总买入换手约束以及总卖出换手约束, 后面三个条件分别是个券换手约束、个券买入换手约束以及个券卖出换手约束, :math:`w_{0i}` 是当前持有的资产 :math:`i` 的权重, :math:`A_i` 是资产 :math:`i` 的成交额. 
+
+* 预期收益约束条件
+
+    .. math::
+        \mathbf{\mu}^T\cdot\mathbf{w}\ge a
+
+其中, :math:`\mathbf{\mu}` 是预期收益率向量, :math:`a` 是预期收益下限. 
+
+* 非零权重数目约束条件
+
+    .. math::
+        \operatorname{nnz}\left( \mathbf{w} \right)\le N
+
+其中, :math:`\operatorname{nnz}` 是取非零个数的函数, :math:`N` 是非零权重数目上限. 
+
+
+均值方差模型
+````````````
+
+均值方差模型来源于上世纪 50 年代的 Markowiz 均值方差理论, 即在给定约束条件下期望效用最大化. 其导出的优化问题的一般形式如下：
+
+.. math::
+    \begin{align}
+      & \underset{\mathbf{w}}{\mathop{\max }}\,\left\{\gamma\cdot\mathbf{\mu}^T\cdot\mathbf{w}-\frac{\lambda }{2}\mathbf{w}^T\mathbf{\Sigma}\mathbf{w}-\operatorname{TC}\left( \mathbf{w} \right) \right\} \\ 
+     & \operatorname{TC}\left( \mathbf{w} \right)={\lambda_1}\sum\limits_{i=1}^n{\left| {{w}_{i}}-{{w}_{0i}} \right|} + {\lambda_2}\sum\limits_{i=1}^n{\left( {{w}_{i}}-{{w}_{0i}} \right)^{+}} + {\lambda_3}\sum\limits_{i=1}^n{{\left( {{w}_{i}}-{{w}_{0i}} \right)}^{-}} \\
+     & s.t.\ \mathbf{w}\in\mathfrak{C}
+    \end{align}
+
+其中, :math:`\mathbf{w}` 是组合权重, 优化变量, :math:`\mathbf{\mu}` 是预期收益率, :math:`\mathbf{\Sigma}` 是收益率的预期协方差矩阵, :math:`\gamma` 是收益项系数, :math:`\lambda\ge 0` 是风险厌恶系数, :math:`\operatorname{TC}` 是交易成本惩罚函数, :math:`\lambda_1\ge 0` 是买卖交易费率, :math:`\lambda_2\ge 0` 是买入交易费率, :math:`\lambda_3\ge 0` 是卖出交易费率, :math:`\mathbf{w}_0` 是当前持有的组合权重, :math:`\mathfrak{C}` 是上一节中提到的 `约束条件`_ 自由组合成的约束集. 
+
+均值方差模型导出的优化问题通常是一个凸规划问题(如果含有非零权重数目约束条件, 则为整数规划问题), 在某些参数取值特殊的情况下可以退化为二次规划或者线性规划问题, 很多成熟的凸优化算法都可以有效的求解该问题. 
+
+如果不对权重做任何约束, 原始的均值方差模型有很多问题:
+
+1. 参数估计误差大。Chopra 和 Ziemba（1993）的研究表明，在风险厌恶为 50 的情况下，均值估计误差带来的效用损失远远高于方差和协方差；风险厌恶水平越高，对均值的估计误差越敏感，效用损失越大。参数尤其是预期收益的估计误差，会给结果带来巨大的不确定性，带来 "Garbage In, Garbage Out" 的后果。
+2. 结果对参数输入非常敏感。Michaud（1989）发现，其结果可能极其不稳定，输入参数的较小改变，可能会使结果大相径庭。
+3. 优化结果可能过于集中。Broadie（1993）的测试表明，在约束条件欠缺的的时候，均值方差模型的结果容易集中在少数证券甚至一个证券。
+4. 换手率高，交易成本太大。De Carvalho 、 Lu 和 Moulin（2012）比较了 6 个组合优化模型（市值加权、等权重、风险平价、波动率倒数、均值方差 和最大分散度），结果表明均值方差模型换手率较高，在不加卖空约束时换手率更高。
+5. 容易得到极端的分配结果。Best 和 Grauer（1991）的研究表明，均值方差模型容易算出极大或极小的权重，且结果对输入均值异常敏感。
+6. 较差的样本外表现。DeMiguel et al.（2009）的结果表明，基于历史数据的均值方差组合，由于估计误差的存在，在样本外表现很难超越等权重组合。
+
+Behr、Guettler 和 Miebs（2013），从权重约束的角度对最小方差组合进行了改进。由于最小方差模型持仓过于集中，换手率高，Behr et al.（2013）尝试进行改进，一方面试图超越等权组合，另一方面减少换手率。具体来说，通过最小化协方差矩阵的 MSE 得到上限和下限，即将样本协方差向一个特定的协方差压缩，这个特定的协方差由上限和下限决定。在获得权重上限和下限后，再带入最小方差组合求解最小方差解即可。利用 5 个数据集，评估权重约束最小方差组合的表现。结果发现：权重约束最小方差组合夏普比等权重组合高 30%，比市值加权高 60%，比简单的卖空约束组合和单因子协方差组合也实现了更高的夏普；和 Demiguel et al.（2009）提出的 PMV 相比，同样是少数跑赢等权组合的方案，权重约束最小方差组合换手率更低。
+
+
+Black-Litterman 模型
+````````````````````
+
+因为均值方差模型面临很多问题，对其的改进也慢慢被提了出来，比如 Black-Litterman 模型。BL 模型由 Black 和 Litterman （1990）提出，尝试从预期收益率的角度进行优化，将投资者的主观观点考虑进来，以减少预期收益率的估计误差。具体而言，假设投资者对组合内一个或多个证券收益率具有一定的预测能力，通过贝叶斯方法将这些主观的预期收益率和先验分布下均衡收益率进行加权平均，形成一个新的后验收益率估计值，最后使用后验收益率进行均值方差优化，即可得到蕴含投资者观点的解。
+
+Idzorek（2005）详细介绍了 BL 模型的计算步骤和细节:
+
+首先，计算组合所有证券的先验均衡收益率。假设其服从正态分布，预期收益率向量为 :math:`\pi`，由风险厌恶系数、历史协方差矩阵和初始权重向量计算而成。这里初始权重向量可以为任何指定权重，如市值加权或最小方差组合权重；成分间预期协方差等于某个常数 r 乘以历史协方差。
+
+然后，估计主观收益率的分布。同样假设其服从正态分布，其预期收益率向量为 Q，如果投资者对 k 个证券具有预测观点，那么 Q 即这 k 个收益率预测的看法向量；预期协方差矩阵为 Ω，即观点的误差矩阵，代表预测观点的信心水平，可以有多种构造方式，如 Satchell 和 Scowcroft （2000）。
+
+最后，将先验均衡收益率和主观收益率按照一定比例进行加权，得到新的后验收益率预测收益向量及其协方差矩阵。接下来的做法和均值方差优化一模一样，把新的参数代入优化器，得到 Markowitz 最优解。
+
+
+Bayes-Stein 模型
+````````````````
+
+对收益率预测的另外一个改进方向便是 Stein 在 1955 年提出的压缩估计法，并由 Jobson、Korkie 和 Ratti（1979）引入组合分析领域，Jorion 在 1984 年做了进一步发展。这个估计方法认为每个组合成分的均值都应该向一个共同的值压缩（world mean），这样能很好地降低参数估计的不确定性，提升组合的样本外表现。具体来看，BS 的计算公式如下：
+
+.. math::
+    \mathbb{E}R = kR_g + (1-k)R_0
+
+其中 :math:`R_g` 为压缩目标，k 为压缩强度，:math:`R_0` 为成分历史均值。压缩目标和压缩强度直接用样本数据估计，压缩目标假设所有资产收益率相同，往往让其等于最小方差组合的收益率；压缩强度由样本大小、资产数量、压缩目标、样本均值和协方差等决定。当压缩强度为 0 时，即不进行压缩估计，结果即为传统的均值方差优化；当压缩强度为 1 时，即假设所有证券收益率相同，那么优化结果蜕化为为最小方差组合。
+
+对比 BS 模型和 BL 模型，两者均使用贝叶斯压缩方法，试图减少收益率的估计误差，使均值方差优化结果更加稳健和合理。两者最大的不同是，BS 压缩估计向一个相同的常数压缩，并不会改变收益率均值的原有排序；BL 模型由于吸收了投资者的主观观点，原有的收益率排序可能被打乱，结果更加灵活多样。
+
+Jorion (1985) 使用 7 个国家 1971~1983 年的股票指数数据，比较了等权重、均值方差优化、BS 压缩估计和最小方差组合的表现。结果发现，组合收益率的事前估计值和事后实现值差异较大，而组合波动率的事前和事后差异较小，侧面说明收益率估计误差减少的重要性；相比于传统的均值方差组合，BS 压缩估计结果改善明显，收益率和夏普比都明显提高；最小方差组合夏普比率最高，但是和 BS 的结果没有显著性差异。
+
+Stevenson（2001）利用 11 个国家 1976 到 1998 的 REITs 数据，讨论了 Bayes-Stein 压缩估计对传统均值方差的改善。首先，检验了均值、方差和协方差估计误差可能带来的影响，发现收益均值估计误差带来的影响比方差和协方差大得多，因此收益均值的改进提升空间可能比较大；接着，比较传统均值方差组合、BS 均值方差组合、最小方差组合和等权重组合的表现，发现传统的均值方差优化表现最差，BS 压缩后的均值方差优化效果确实有所提高，表现为收益更大波动更小；最后，比较了四个组合夏普之间是否有显著性差异，发现 BS 组合和最小方差组合相对传统的均值方差组合，夏普比率有显著的提高，而 BS 组合、最小方差组合和等权重三者之间没有明显差异。
+
+
+最大夏普率模型
+``````````````
+
+最大夏普率模型导出的优化问题形式如下：
+
+.. math::
+    \begin{align}
+    & \underset{\mathbf{w}}{\mathop{\max }}\,\frac{\mathbf{\mu}^T\cdot\mathbf{w}}{\sqrt{\mathbf{w}^T\Sigma\mathbf{w}}}\\ 
+    & s.t.\ \mathbf{w}\in\mathfrak{C}
+    \end{align}
+
+其中, :math:`\mathbf{w}` 是组合权重, 优化变量, :math:`\mathbf{\mu}` 是预期收益率, :math:`\mathbf{\Sigma}` 是收益率的预期协方差矩阵, :math:`\mathfrak{C}` 是上一节中提到的 `约束条件`_ 自由组合成的约束集. 
+
+上述优化问题的目标函数是有理分式的形式, 通常将其转化成凸规划和一维搜索的组合问题. 
+
+对于任意的预期收益水平 :math:`x`, 定义一元函数 :math:`f\left(x\right)` 为如下凸规划问题的最优解：
+
+.. math::
+    \begin{align}
+    & f\left(x\right) = \underset{\mathbf{w}}{\mathop{\max }}\,\frac{x}{\sqrt{\mathbf{w}^T\Sigma\mathbf{w}}}\\ 
+    & s.t.\ \mathbf{w}\in\mathfrak{C},\ \mathbf{\mu}^T\cdot\mathbf{w}=x
+    \end{align}
+
+对于 :math:`f\left(x\right)`, 求其极大值, 对应的最优解为 :math:`x^*`, 对应该预期收益水平 :math:`x^*` 的凸规划问题的解 :math:`w^*` 就是原问题的解. 
+
+
+风险预算模型
+````````````
+
+对于组合 :math:`\mathbf{w}` 的风险度量 :math:`\mathcal{R}\left(\mathbf{w}\right)` 采用波动率度量：
+
+.. math::
+    \mathcal{R}\left(\mathbf{w}\right) = \sigma\left(\mathbf{w}\right) = \sqrt{\mathbf{w}^T\cdot\mathbf{\Sigma}\cdot\mathbf{w}}
+
+其中, :math:`\Sigma` 是协方差矩阵, 边际风险贡献定义为 :math:`\sigma\left(\mathbf{w}\right)` 相对于 :math:`\mathbf{w}` 的梯度：
+
+    .. math::
+        \nabla_{\mathbf{w}}\sigma\left(\mathbf{w}\right) = \frac{\mathbf{\Sigma}\mathbf{w}}{\sqrt{\mathbf{w}^T\mathbf{\Sigma}\mathbf{w}}}
+
+第 :math:`i` 个证券对于组合的风险贡献度定义为：
+
+    .. math::
+        \mathcal{RC}_i=w_i\cdot\frac{\left(\mathbf{\Sigma}\mathbf{w}\right)_i}{\sqrt{\mathbf{w}^T\mathbf{\Sigma}\mathbf{w}}}
+
+则可以将组合的总风险分解到各个证券上：
+
+    .. math::
+        \begin{align}
+        \sigma\left(\mathbf{w}\right) &= \mathbf{w}^T\cdot\frac{\mathbf{\Sigma}\mathbf{w}}{\sqrt{\mathbf{w}^T\mathbf{\Sigma}\mathbf{w}}}\\
+        &= \sum\limits_{i=1}^{n}w_i\cdot\frac{\left(\mathbf{\Sigma}\mathbf{w}\right)_i}{\sqrt{\mathbf{w}^T\mathbf{\Sigma}\mathbf{w}}}\\
+        &= \sum\limits_{i=1}^{n}\mathcal{RC}_i\\
+        \end{align}
+
+对于给定的风险预算 :math:`\mathbf{b}`, 定义风险预算组合为：
+
+    .. math::
+        \left\{ \begin{align}
+                   & \mathcal{RC}_i=b_i\cdot\mathcal{R}\left(\mathbf{w}\right)  \\
+                   & b_i\ge0  \\
+                   & w_i\ge0  \\
+                   & \sum\limits_{i=1}^{n}b_i = 1  \\
+                   & \sum\limits_{i=1}^{n}w_i = 1  \\
+                \end{align}
+        \right.
+
+当 :math:`b_i=\frac{1}{n},i=1,\ldots,n` 时该模型即为风险平价模型, 即各个资产的风险贡献度相同. 
+
+该非线性方程组的求解将转化为如下的优化问题：
+
+.. math::
+    \begin{align}
+      & \underset{\mathbf{w}}{\mathop{\min}}\,f\left(\mathbf{w};\mathbf{b}\right)=\sum\limits_{i=1}^{n}\left(\mathcal{RC}_i-b_i\mathcal{R}(\mathbf{w})\right)^2 \\ 
+     & s.t.\ \mathbf{1}^T\cdot\mathbf{w}=1,\mathbf{0}\le\mathbf{w}\le\mathbf{1} \\ 
+    \end{align}
+
+或者：
+
+.. math::
+    \begin{align}
+      & \underset{\mathbf{w}}{\mathop{\min}}\,f\left(\mathbf{w};\mathbf{b}\right)=\sum\limits_{i=1}^{n}\sum\limits_{j=1}^{n}{\left(\frac{\mathcal{RC}_i}{b_i}-\frac{\mathcal{RC}_j}{b_j}\right)^2} \\ 
+     & s.t.\ \mathbf{1}^T\cdot\mathbf{w}=1,\mathbf{0}\le\mathbf{w}\le\mathbf{1} \\ 
+    \end{align}
+
+以下主要针对第二个优化问题构建求解方法. 
+
+通过计算目标函数 :math:`f\left(\mathbf{w};\mathbf{b}\right)` 的梯度和 Hessian 矩阵可以帮助减少计算次数, 尤其在资产数目很大的时候, 目标函数的梯度为：
+
+.. math::
+    \begin{align}
+        \frac{\partial f}{\partial w_k} &= \frac{4n}{\sigma^2}w_k\frac{\left(\Sigma \mathbf{w}\right)^2_k}{b_k^2} - \frac{4}{\sigma^2}\frac{\left(\Sigma\mathbf{w}\right)_k}{b_k}\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\\
+        &+ \frac{4n}{\sigma^2}\sum\limits_{i=1}^{n}w_i^2\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i^2}\Sigma_{ik} - \frac{4}{\sigma^2}\left(\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\right)\cdot\left(\sum\limits_{i=1}^{n}\frac{w_i}{b_i}\Sigma_{ik}\right)\\
+        &- \frac{4n}{\sigma^4}\left(\sum\limits_{i=1}^{n}w_i^2\frac{\left(\Sigma\mathbf{w}\right)^2_i}{b_i^2}\right)\cdot\left(\sum\limits_{i=1}^{n}w_i\Sigma_{ik}\right) + \frac{4}{\sigma^4}\left(\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\right)^2\cdot\left(\sum\limits_{i=1}^{n}w_i\Sigma_{ik}\right)\\
+    \end{align}
+
+矩阵形式为：（矩阵之间对应元素相乘记为 :math:`.*`, 矩阵的乘方也是各个元素分别乘方）
+
+.. math::
+    \begin{align}
+        \frac{\partial f}{\partial\mathbf{w}} &= \frac{4n}{\sigma^2}w.*\left(\Sigma\mathbf{w}\right)^2.*\mathbf{b}^{-2} - \frac{4}{\sigma^2}\left(\mathbf{w}^T\left((\Sigma\mathbf{w}).*\mathbf{b}^{-1}\right)\right)\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\\
+        &+ \frac{4n}{\sigma^2}\Sigma\cdot\left(\mathbf{w}^2.*\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-2}\right) - \frac{4}{\sigma^2}\left(\mathbf{w}^T\left((\Sigma\mathbf{w}).*\mathbf{b}^{-1}\right)\right)\cdot\Sigma\cdot\left(\mathbf{w}.*\mathbf{b}^{-1}\right)\\
+        &- \frac{4n}{\sigma^4}\left(\mathbf{w}^2\right)^T\cdot\left((\Sigma\mathbf{w})^2.*\mathbf{b}^{-2}\right)\cdot\Sigma\mathbf{w} + \frac{4}{\sigma^4}\left(\mathbf{w}^T\left((\Sigma\mathbf{w}).*\mathbf{b}^{-1}\right)\right)^2\cdot\Sigma\mathbf{w}\\
+    \end{align}
+
+目标函数的 Hessian 矩阵为：
+
+.. math::
+    \begin{align}
+        \frac{\partial^2f}{\partial w_k\partial w_l} &= -\frac{2}{\sigma^2}\frac{\partial f}{\partial w_k}\left(\Sigma\mathbf{w}\right)_l + \frac{4n}{\sigma^2}\left[\delta_{kl}\frac{\left(\Sigma\mathbf{w}\right)^2_k}{b_k^2}+2w_k\frac{\left(\Sigma\mathbf{w}\right)_k}{b_k^2}\Sigma_{kl}\right]\\
+        &- \frac{4}{\sigma^2}\left[\frac{\left(\Sigma\mathbf{w}\right)_l}{b_l}+\sum\limits_{i=1}^{n}\frac{w_i}{b_i}\Sigma_{il}\right]\frac{\left(\Sigma\mathbf{w}\right)_k}{b_k} - \frac{4}{\sigma^2}\left(\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\right)\frac{\Sigma_{kl}}{b_k}\\
+        &+ \frac{4n}{\sigma^2}\left[2w_l\frac{\left(\Sigma\mathbf{w}\right)_l}{b_l^2}\Sigma_{lk}+\sum\limits_{i=1}^{n}\frac{w^2_i}{b_i^2}\Sigma_{ik}\Sigma_{il}\right]-\frac{4}{\sigma^2}\left[\frac{\left(\Sigma\mathbf{w}\right)_l}{b_l}+\sum\limits_{i=1}^{n}\frac{w_i}{b_i}\Sigma_{il}\right]\sum\limits_{i=1}^{n}\frac{w_i}{b_i}\Sigma_{ik}\\
+        &- \frac{4}{\sigma^2}\left(\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\right)\frac{\Sigma_{lk}}{b_l} - \frac{8n}{\sigma^4}\left[w_l\frac{\left(\Sigma\mathbf{w}\right)_l^2}{b^2_l}+\sum\limits_{i=1}^{n}w_i^2\frac{\left(\Sigma\mathbf{w}\right)_i}{b^2_i}\Sigma_{il}\right]\left(\sum\limits_{i=1}^{n}w_i\Sigma_{ik}\right)\\
+        &- \frac{4n}{\sigma^4}\left(\sum\limits_{i=1}^{n}w_i^2\frac{\left(\Sigma\mathbf{w}\right)^2_i}{b^2_i}\right)\Sigma_{lk} + \frac{8n}{\sigma^6}\left(\Sigma\mathbf{w}\right)_l\left(\sum\limits_{i=1}^{n}w_i^2\frac{\left(\Sigma\mathbf{w}\right)_i^2}{b_i^2}\right)\left(\sum\limits_{i=1}^{n}w_i\Sigma_{ik}\right)\\
+        &+ \frac{8}{\sigma^4}\left(\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\right)\left[\frac{\left(\Sigma\mathbf{w}\right)_l}{b_l}+\sum\limits_{i=1}^{n}\frac{w_i}{b_i}\Sigma_{il}\right]\cdot\sum\limits_{i=1}^{n}w_i\Sigma_{ik}\\
+        &+ \frac{4}{\sigma^4}\left(\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\right)^2\cdot\Sigma_{lk} - \frac{8}{\sigma^6}\left(\Sigma\mathbf{w}\right)_l\left(\sum\limits_{i=1}^{n}w_i\frac{\left(\Sigma\mathbf{w}\right)_i}{b_i}\right)^2\sum\limits_{i=1}^{n}w_i\Sigma_{ik}\\
+    \end{align}
+
+其中, :math:`\delta_{kl}` 为 Kronecker 函数, 即：
+
+.. math::
+    \delta_{kl} = \left\{\begin{matrix}
+                         1,k=l  \\
+                         0,k\ne l  \\
+                         \end{matrix} \right.
+
+矩阵形式为：（矩阵之间对应元素相乘记为 :math:`.*`, 矩阵的乘方也是各个元素分别乘方）
+
+.. math::
+    \begin{align}
+        \frac{\partial^2f}{\partial\mathbf{w}^2} &= -\frac{2}{\sigma^2}\frac{\partial f}{\partial w}\cdot \left(\Sigma\mathbf{w}\right)^T + \frac{4n}{\sigma^2}\operatorname{D}\left(\left(\Sigma\mathbf{w}\right)^2.*\mathbf{b}^{-2}\right)\\
+        &+ \frac{8n}{\sigma^2}\operatorname{D}\left(\mathbf{w}.*\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-2}\right)\cdot\Sigma - \frac{4}{\sigma^2}\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)^T\\
+        &- \frac{4}{\sigma^2}\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\left(\Sigma\cdot\left(\mathbf{w}.*\mathbf{b}^{-1}\right)\right)^T - \frac{4}{\sigma^2}\left(\mathbf{w}^T\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\right)\operatorname{D}\left(\mathbf{b}^{-1}\right)\cdot\Sigma\\
+        &+ \frac{8n}{\sigma^2}\Sigma\cdot\operatorname{D}\left(\mathbf{w}.*\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-2}\right) + \frac{4n}{\sigma^2}\Sigma\cdot\operatorname{D}\left(\mathbf{w}^2.*\mathbf{b}^{-2}\right)\cdot\Sigma\\
+        &- \frac{4}{\sigma^2}\left(\Sigma\cdot\left(\mathbf{w}.*\mathbf{b}^{-1}\right)\right)\cdot\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)^T - \frac{4}{\sigma^2}\left(\Sigma\left(\mathbf{w}.*\mathbf{b}^{-1}\right)\right)\cdot\left(\Sigma\left(\mathbf{w}.*\mathbf{b}^{-1}\right)\right)^T\\
+        &- \frac{4}{\sigma^2}\left(\mathbf{w}^T\cdot\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\right)\Sigma\cdot\operatorname{D}\left(\mathbf{b}^{-1}\right) - \frac{8n}{\sigma^4}\left(\Sigma\mathbf{w}\right)\cdot\left(\mathbf{w}.*\left(\Sigma\mathbf{w}\right)^2.*\mathbf{b}^{-2}\right)^T\\
+        &- \frac{8n}{\sigma^4}\left(\Sigma\mathbf{w}\right)\left(\Sigma\left(\mathbf{w}^2.*\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-2}\right)\right)^T - \frac{4N}{\sigma^4}\left(\left(\mathbf{w}^2\right)^T\cdot\left(\left(\Sigma\mathbf{w}\right)^2.*\mathbf{b}^{-2}\right)\right)\cdot\Sigma\\
+        &+ \frac{8n}{\sigma^6}\left(\left(\mathbf{w}^2\right)^T\cdot\left(\left(\Sigma\mathbf{w}\right)^2.*\mathbf{b}^{-2}\right)\right)\left(\Sigma\mathbf{w}\right)\cdot\left(\Sigma\mathbf{w}\right)^T\\
+		&+ \frac{8}{\sigma^4}\left(\mathbf{w}^T\cdot\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\right)\left(\Sigma\mathbf{w}\right)\cdot\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)^T\\
+        &+ \frac{8}{\sigma^4}\left(\mathbf{w}^T\cdot\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\right)\left(\Sigma\mathbf{w}\right)\cdot\left(\Sigma\cdot\left(\mathbf{w}.*\mathbf{b}^{-1}\right)\right)^T\\
+        &+ \frac{4}{\sigma^4}\left(\mathbf{w}^T\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\right)^2\Sigma - \frac{8}{\sigma^6}\left(\mathbf{w}^T\cdot\left(\left(\Sigma\mathbf{w}\right).*\mathbf{b}^{-1}\right)\right)^2\cdot\left(\Sigma\mathbf{w}\right)\cdot\left(\Sigma\mathbf{w}\right)^T\\
+    \end{align}
+
+其中, :math:`\operatorname{D}\left(\cdot\right)` 是对角化函数, 即对于向量 :math:`\mathbf{x}`, 有：
+
+    .. math::
+        \operatorname{D}\left(\mathbf{x}\right) = \left(\begin{matrix}
+                                                           {{x}_{1}} & 0 & \cdots  & 0  \\
+                                                           0 & {{x}_{2}} & \cdots  & 0  \\
+                                                           \vdots  & \vdots  & \ddots  & \vdots   \\
+                                                           0 & 0 & \cdots  & {{x}_{n}}  \\
+                                                        \end{matrix}\right)
+
+对于维度较高的问题, 也可以先求解如下的凸规划问题：
+
+.. math::
+    \begin{align}
+    & \underset{\mathbf{x}}{\mathop{\min}}\,\mathcal{R}\left(\mathbf{x}\right)=\sqrt{\mathbf{x}^T\Sigma\mathbf{x}}\\
+    & s.t.\ \sum\limits_{i=1}^{n}b_i\operatorname{ln}x_i\ge c, \mathbf{0}\le\mathbf{x}\le\mathbf{1}\\
+    \end{align}
+
+其中, :math:`c` 是满足 :math:`c<\sum\limits_{i=1}^{n}b_i\operatorname{ln}b_i` 的任意常数, 最后将最优解归一化得到原问题的解：
+
+.. math::
+    \mathbf{w} = \frac{\mathbf{x}}{\mathbf{1}^T\mathbf{x}}
+
+Maillard，Roncalli 和 Teïletche（2008）在他们的研究中详细讨论风险平价的性质。首先，组合中波动较高的证券（或者相关性高的证券）在权重计算时会受到惩罚，获得更小的权重。当所有成分的相关系数相同并且 Sharpe 比率也相等时，风险平价组合是 Markowitz 最优的；当组合所有成分证券相关系数相等时，那么风险平价即为波动率倒数加权。最后可以证明，风险平价介于等权重和最小方差之间，其波动大于最小方差，小于等权重组合。
+
+
+最大分散度模型
+``````````````
+
+最大分散度模型由 Choueifaty 和 Coignard 在 2008 年提出, 该模型试图构造分散程度最大的投资组合, 分散程度通过比较组合整体波动率和组合中资产的加权平均波动率的距离来度量, 该模型可归结为以下的优化问题
+
+.. math::
+    \begin{align}
+      & \underset{\mathbf{w}}{\mathop{\max}}\,\frac{\sum\limits_{i=1}^{n}w_i\sigma_i}{\sqrt{\mathbf{w}^T\Sigma\mathbf{w}}}\\
+     & s.t.\ \mathbf{1}^T\mathbf{w}=1, \mathbf{0}\le\mathbf{w}\le\mathbf{1}\\
+    \end{align}
+
+其中, :math:`\sigma_i` 是资产 :math:`i` 的波动率, 分母是组合的波动率, 分子是组合中资产的加权平均波动率, 也可以看成所有资产的相关系数为 1 时的波动率, 即分散化完全无效时的情形. 分子和分母的本质差别在于相关性, 为了最大化这个比值, 分母中包含的相关性必须被最小化. 所以该配置模型试图选择能够最小化标的资产间相关性的资产, 从而达到所谓的最大化分散的目的. 从直观上看，当资产预期收益率与其波动率成正比时, 最大分散度就等价于最大夏普比, 此时能达到 Markov 均值方差最优; 同时, 当所有证券波动率都相等的话, 最大分散度又等同于最小方差.
+
+从计算的角度看, 目标函数为有理式, 但可以转换成二次规划问题. 对协方差矩阵进行分解：
+
+.. math::
+    \mathbf{\Sigma} = \mathbf{D}^{1/2}\cdot\mathbf{P}\cdot\mathbf{D}^{1/2}
+
+其中, :math:`\mathbf{D}` 是取协方差阵的对角元素形成的对角阵, 而 :math:`\mathbf{P}` 是相关系数矩阵, 则容易证明原问题可以按照下列步骤求解. 
+
+1. 求解二次规划问题：
+
+    .. math::
+        \begin{align}
+        & \underset{\mathbf{x}}{\mathop{\min}}\,\frac{1}{2}\mathbf{x}^T\cdot\mathbf{P}\cdot\mathbf{x}\\
+        & s.t.\ \mathbf{1}^T\mathbf{x}=1, \mathbf{0}\le\mathbf{x}\le\mathbf{1}\\
+        \end{align}
+
+2. 使用资产的波动率调整中间变量 :math:`\mathbf{x}`：
+
+    .. math::
+        \mathbf{\xi} = \mathbf{D}^{-1/2}\cdot\mathbf{x},\ \xi_i=\frac{x_i}{\sigma_i}
+
+3. 归一化：
+
+    .. math::
+        \mathbf{w} = \frac{\mathbf{\xi}}{\mathbf{1}^T\mathbf{\xi}},\ w_i=\frac{\xi_i}{\sum\limits_{i=1}^{n}\xi_i}
+
+还可以从计量组合中资产的平均相关水平的角度来理解最大分散化模型. 一个组合风险并非简单的将资产的波动率加权平均, 同样组合中资产的相关性水平也不能简单的对两两相关系数取平均来衡量, 它们中蕴含着非线性的关系. 
+
+从组合方差的计算公式入手：
+
+.. math::
+    \sigma^2 = \sum\limits_{i=1}^{n}w_i^2\sigma_i^2+2\sum\limits_{i=1}^{n-1}\sum\limits_{j>i}^{n}\rho_{ij}w_iw_j\sigma_i\sigma_j
+
+其中, :math:`\rho_{ij}` 是资产 :math:`i` 和 :math:`j` 的相关系数. 
+
+假设 :math:`\bar{\rho}` 是资产间的平均相关水平, 则有：
+
+.. math::
+    \sigma^2 = \sum\limits_{i=1}^{n}w_i^2\sigma_i^2+2\sum\limits_{i=1}^{n-1}\sum\limits_{j>i}^{n}\rho_{ij}w_iw_j\sigma_i\sigma_j = \sum\limits_{i=1}^{n}w_i^2\sigma_i^2+2\sum\limits_{i=1}^{n-1}\sum\limits_{j>i}^{n}\bar{\rho}w_iw_j\sigma_i\sigma_j
+
+定义组合加权相关水平（WPC）指标为 :math:`\bar{\rho}`：
+
+.. math::
+    WPC = \bar{\rho} = \frac{\sum\limits_{i=1}^{n-1}\sum\limits_{j>i}^{n}\rho_{ij}w_iw_j\sigma_i\sigma_j}{\sum\limits_{i=1}^{n-1}\sum\limits_{j>i}^{n}w_iw_j\sigma_i\sigma_j}
+
+本质上, WPC 是经过资产波动率调整的加权平均两两相关系数. 
+
+一个自然的想法是 WPC 较低的组合应该是更充分分散的组合. 再引入两个概念——分散度比率（DR）和集中度比率（CR）：
+
+.. math::
+    \begin{align}
+        & DR = \frac{\sum\limits_{i=1}^{n}w_i\sigma_i}{\sigma}\\
+        & CR = \frac{\sum\limits_{i=1}^{n}w_i^2\sigma^2_i}{\left(\sum\limits_{i=1}^{n}w_i\sigma_i\right)^2}\\
+    \end{align}
+
+分散度比率（DR）即是前面最大化分散模型的优化目标, 而集中度比率（CR）是仅仅只考虑资产波动率的组合集中度的简单度量. 一个完全集中的多头组合是将所有的资金投资在单一资产上, 此时 :math:`CR=1`, 而波动率倒数加权的投资组合具有最低的集中度, 此时 :math:`CR=\frac{1}{n}`. 
+
+上述三个指标有一个简单的公式联系在一起：
+
+.. math::
+    DR = \frac{1}{\sqrt{WPC\cdot\left(1-CR\right)+CR}} = \frac{1}{\sqrt{CR\cdot\left(1-WPC\right)+WPC}}
+
+从而最大化分散度比率（DR）可以通过降低集中度比率（CR）或者降低组合的平均相关水平（WPC）来实现. 
+
+从上面的论述可知, 波动率倒数组合是最小集中度组合, 也称为波动率平价组合, 而最大分散化组合也被称为相关性平价组合. 
+
+
+最大分散权重模型
+````````````````
+
+将权重升序排列, 记排序后的权重向量为:
+
+.. math::
+    w_{[1]}\leq w_{[2]}\leq\ldots\leq w_{[n]}
+
+则排序后的累积权重即为**Lorenz Curve**:
+
+.. math::
+    L_0=0, L_{k} = \sum\limits_{i=1}^{k}w_{[i]}
+
+另外记最大的 k 个权重的累积值为:
+
+.. math::
+    CW_{k} = \sum\limits_{i=1}^{k}w_{[n-i+1]}
+
+
+**Gini Coefficient**
+
+Gini Coefficient 定义为 Lorenz Curve 和对象线围城的面积与对角线以下面积(1/2)的比.
+
+.. math::
+    \begin{align}
+        & \underset{\mathbf{w}}{\mathop{\min}}\,Gini(\mathbf{w}) = \frac{\frac{1}{2} - \sum\limits_{i=1}^{n}\frac{1}{2}\frac{1}{n}(L_{i-1}+L_i)}{\frac{1}{2}}\\
+        & = 1-\frac{1}{n}\sum\limits_{i=1}^{n}(L_{i-1}+L_i)\\
+        & = \frac{1}{n}\sum\limits_{i=1}^{n}(2i-1)w_{[i]}-1
+    \end{align}
+
+Gini Coefficient 的取值范围为 0 (完全分散) 和 :math:`1–\frac{1}{n}` (完全集中).
+
+
+**Herfindahl-Hirschman Index**
+
+.. math::
+    \underset{\mathbf{w}}{\mathop{\min}}\,HH(\mathbf{w}) = \sum\limits_{i=1}^{n}w_i^2
+
+Herfindahl-Hirschman Index 常用来度量产业集中度或者市场集中度, 其取值范围为 :math:`\frac{1}{n}` (完全分散)和 1 (完全集中).
+
+
+**Hannah-Kay Index**
+
+Hannah-Kay Index 是 Herfindahl-Hirschman Index 的推广, 给定 :math:`\alpha>0, \alpha\neq1`:
+
+.. math::
+    \underset{\mathbf{w}}{\mathop{\min}}\,HK_\alpha(\mathbf{w}) = \left(\sum\limits_{i=1}^{n}w_i^\alpha\right)^{\frac{1}{\alpha-1}}
+
+Hannah-Kay Index 取值范围为 :math:`\frac{1}{n}` (完全分散)和 1 (完全集中).
+
+
+**Hall-Tideman Index**
+
+.. math::
+    \underset{\mathbf{w}}{\mathop{\min}}\,HT(\mathbf{w}) = \frac{1}{2\sum\limits_{i=1}^{n}(n-i+1)w_{[i]}-1}
+
+Hall-Tideman Index 取值范围为 :math:`\frac{1}{n}` (完全分散)和 1 (完全集中).
+
+
+**Shannon Entropy**
+
+.. math::
+    \underset{\mathbf{w}}{\mathop{\min}}\,SE(\mathbf{w}) = \sum\limits w_i\log(w_i)
+
+Shannon Entropy 取值范围为 :math:`-\log n` (完全分散) 和 0 (完全集中).
+
+
+**Theil Entropy**
+
+.. math::
+    \underset{\mathbf{w}}{\mathop{\min}}\,TE(\mathbf{w}) = \sum\limits w_i\log(w_i) + \log n
+
+Theil Entropy 取值范围为 0 (完全分散) 和 :math:`\log n` (完全集中), Theil Entropy 与 Shannon Entropy 的优化目标一致.
+
+
+
+
+组合构建
+--------
+
+.. attention::
+
+    本章节的应用需要一些基本的数据, 参见 :ref:`示例数据<示例数据>` 的配置.
+
+QuantStudio 提供了投资组合构造器来辅助组合优化的实现. 投资组合构造器的功能集中在 PortfolioConstructor 子模块中.
+
+这里以最小方差组合的构建为例::
+
+    # -*- coding: utf-8 -*-
+    import datetime as dt
+
+    import numpy as np
+    import pandas as pd
+
+    import QuantStudio.api as QS
+
+    if __name__=='__main__':
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录":"C:\\HDF5Data"})
+        HDB.connect()
+        RDB = QS.RiskDB.HDF5FRDB(sys_args={"主目录":"C:\\RiskData"})
+        RDB.connect()
+        
+        # 创建投资组合构造器
+        import matlab.engine
+        MatlabEng = matlab.engine.start_matlab(option="-desktop")# 启动一个新的 MATLAB
+        #MatlabEng = matlab.engine.connect_matlab(name="MATLAB_147264")# 链接到一个已经启动的 MATLAB
+        PC = QS.PortfolioConstructor.MatlabPC(matlab_eng=MatlabEng)
+        #PC = QS.PortfolioConstructor.CVXPC(sys_args={"优化选项":{"solver":"MOSEK"}})
+        
+        # 设置相关数据
+        TargetDT = dt.datetime(2017, 12, 29)
+        FT = HDB.getTable("ElementaryFactor")
+        TargetIDs = FT.getID()[:500]
+        PC["目标ID"] = TargetIDs
+        PC["预期收益"] = FT.readData(factor_names=["月收益率"], ids=TargetIDs, dts=[TargetDT]).iloc[0, 0, :]
+        RT = RDB.getTable("BarraRiskData")
+        #PC["协方差矩阵"] = RT.readCov(dts=[TargetDT], ids=TargetIDs)[TargetDT]
+        PC["因子协方差阵"] = RT.readFactorCov(dts=[TargetDT]).loc[TargetDT]
+        PC["风险因子"] = RT.readFactorData(dts=[TargetDT], ids=TargetIDs).loc[:, TargetDT, :]
+        PC["特异性风险"] = RT.readSpecificRisk(dts=[TargetDT], ids=TargetIDs).loc[TargetDT, :]
+        PC["成交金额"] = FT.readData(factor_names=["成交金额"], ids=TargetIDs, dts=[TargetDT]).iloc[0, 0, :]
+        PC["初始投资组合"] = pd.Series(0.0,index=TargetIDs)
+        PC["总财富"] = 1000000000
+        
+        # 设置优化目标
+        Objective = QS.PortfolioConstructor.MeanVarianceObjective(pc=PC)
+        Objective["收益项系数"] = 0.0
+        Objective["风险厌恶系数"] = 1.0
+        PC["优化目标"] = Objective
+        
+        # 设置约束条件
+        # 预算约束
+        iConstraint = QS.PortfolioConstructor.BudgetConstraint(pc=PC)
+        iConstraint["限制上限"] = 1.0
+        iConstraint["限制下限"] = 1.0
+        PC["约束条件"].append(iConstraint)
+        # 权重约束
+        iConstraint = QS.PortfolioConstructor.WeightConstraint(pc=PC)
+        iConstraint["限制上限"] = 1.0
+        iConstraint["限制下限"] = 0.0
+        PC["约束条件"].append(iConstraint)
+        
+        # 求解优化问题
+        Portfolio, ResultInfo = PC.solve()
+        
+        print(Portfolio)
+        print(ResultInfo)
+        
+        HDB.disconnect()
+        RDB.disconnect()
+
+脚本首先创建了因子库 HDB, 风险库 RDB 用于提供相关数据, 接着实例化一个投资组合构造器对象 PC, 这个构造器依赖于 MATLAB 的优化器, 所以这两句是在创建一个 MATLAB engine 对象::
+
+    import matlab.engine
+    MatlabEng = matlab.engine.start_matlab(option="-desktop")# 启动一个新的 MATLAB
+    #MatlabEng = matlab.engine.connect_matlab(name="MATLAB_147264")# 链接到一个已经启动的 MATLAB
+
+如果 MATLAB 已经启动, 可以向上面注释掉的那行代码一样传入 MATLAB engine 的名字调用 connect_matlab 方法连接到打开的 MATLAB, 没有启动的话可以用 matlab.engine.start_matlab 来启动一个新的 MATLAB, 关于 MATLAB engine 的相关信息参照 MATLAB 帮助文档. 此外, 该构造器调用的是 MATLAB 里的 yalmip 工具箱, 关于此工具箱的安装, 参照 "连接(TODO)", 用户可以使用 yalmip 调用自己可获得的性能更好的优化器, 比如 CPLEX, MOSEK 等. 这里假设 MATLAB 以及 yalmip 已经设置好了.
+
+接下来是设置 PC 的相关参数和数据, 比如预期收益, 风险矩阵等等. 这里预期收益暂时使用月收益率数据代表(最小方差模型不需要预期收益, 也可以不用设置, 这里只是为了演示参数设置), 风险数据从风险数据库中读取.
+
+之后便是定义优化问题, 设置优化目标和约束条件, 优化目标通过 PortfolioConstructor 子模块下提供的各种优化目标类实例化得到, 这里使用 MeanVarianceObjective 均值方差目标, 约束条件也是通过 PortfolioConstructor 子模块下提供的各种约束条件类实例化得到, 这里使用了两种约束条件: BudgetConstraint(预算约束), WeightConstraint(权重约束), 优化目标和约束条件对象的初始化需要提供所属的投资组合构建器作为参数.
+
+最后调用投资组合构建器的 solve 方法求解优化问题得到投资组合, solve 返回值有两个: Portfolio 是投资组合, ResultInfo 是优化问题求解的相关信息, 数据类型为字典, 如果求解成功, Portfolio 为 Series 类型, index 是 ID 列表, 值为对应权重, ResultInfo 中的 key "Status" 对应的 value 为 1; 如果求解失败, Portfolio 为 None, ResultInfo 中的 key "Status" 对应的 value 为非 1 的值.
+
+
+API 参考
+--------
+
+约束条件
+````````
+
+.. py:module:: BasePC
+
+.. py:class:: Constraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    约束条件基类, 所有的约束条件均继承自此类, 不能实例化对象
+    
+    :param PortfolioConstructor pc: 约束条件所属的组合构造器对象
+    :param dict sys_args: 对象参数
+    :param str config_file: 对象配置文件地址
+
+    .. py:attribute:: Type
+    
+        该约束条件的类型, str
+
+    .. py:attribute:: Dependency
+    
+        该约束条件的依赖项, dict
+    
+    .. py:method:: genConstraint()
+    
+        返回该约束条件的数学形式表达
+        
+        :return: 内部使用的数学形式表达的约束条件
+        :rtype: list
+
+.. py:class:: BudgetConstraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    预算约束条件, 继承自 :py:class:`BasePC.Constraint`, 
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 限制上限: 预算约束上限, float, 默认值 1.0, 如果为 inf, 表示无上限, 如果限制上限等于限制下限, 则为预算等式约束
+            * 限制下限: 预算约束下限, float, 默认值 1.0, 如果为 -inf, 表示无下限, 如果限制上限等于限制下限, 则为预算等式约束
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+            * 舍弃优先级: 在优化问题求解失败时调整约束条件的舍弃优先级, float, 默认值 -1, QuantStudio 会在优化问题求解失败时按照优先级从大到小依次舍弃某些约束条件, 直到问题可解, <=-1 表示不可舍弃.
+
+.. py:class:: WeightConstraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    权重约束条件, 继承自 :py:class:`BasePC.Constraint`, 
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 目标ID: 施加约束的 ID 过滤条件, str, 默认值 "", 空字符串表示对所有的 ID 都施加约束
+            * 限制上限: 权重约束上限, float 或者 str, 默认值 1.0, 如果类型为 float 并且值为 inf, 表示无上限, 如果限制上限等于限制下限, 则为固定权重约束; 如果类型为 str, 则该字符串必须为因子名称, 表示以给定的因子值作为限制上限
+            * 限制下限: 权重约束下限, float 或者 str, 默认值 0.0, 如果类型为 float 并且值为 -inf, 表示无下限, 如果限制上限等于限制下限, 则为固定权重约束; 如果类型为 str, 则该字符串必须为因子名称, 表示以给定的因子值作为限制下限
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+            * 舍弃优先级: 在优化问题求解失败时调整约束条件的舍弃优先级, float, 默认值 -1, QuantStudio 会在优化问题求解失败时按照优先级从大到小依次舍弃某些约束条件, 直到问题可解, <=-1 表示不可舍弃.
+
+.. py:class:: FactorExposeConstraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    因子暴露约束条件, 继承自 :py:class:`BasePC.Constraint`, 
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 因子类型: 因子的数据类型, str, 可选: "数值型", "类别型", 默认值 "数值型", 类别型因子会转换成 0-1 编码格式
+            * 因子名称: 需要施加约束的因子名列表, list(str)
+            * 限制上限: 因子暴露约束上限, float, 默认值 0.0, 如果为 inf, 表示无上限, 如果限制上限等于限制下限, 则为固定暴露约束
+            * 限制下限: 因子暴露约束下限, float, 默认值 0.0, 如果为 -inf, 表示无下限, 如果限制上限等于限制下限, 则为固定暴露约束
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+            * 舍弃优先级: 在优化问题求解失败时调整约束条件的舍弃优先级, float, 默认值 -1, QuantStudio 会在优化问题求解失败时按照优先级从大到小依次舍弃某些约束条件, 直到问题可解, <=-1 表示不可舍弃.
+
+.. py:class:: ExpectedReturnConstraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    预期收益约束条件, 继承自 :py:class:`BasePC.Constraint`, 
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 限制下限: 预期收益约束下限, float, >0, 默认值 0.0
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+            * 舍弃优先级: 在优化问题求解失败时调整约束条件的舍弃优先级, float, 默认值 -1, QuantStudio 会在优化问题求解失败时按照优先级从大到小依次舍弃某些约束条件, 直到问题可解, <=-1 表示不可舍弃.
+
+.. py:class:: VolatilityConstraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    波动率约束条件, 继承自 :py:class:`BasePC.Constraint`, 
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 限制上限: 波动率约束上限, float, >0, 默认值 0.06
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+            * 舍弃优先级: 在优化问题求解失败时调整约束条件的舍弃优先级, float, 默认值 -1, QuantStudio 会在优化问题求解失败时按照优先级从大到小依次舍弃某些约束条件, 直到问题可解, <=-1 表示不可舍弃.
+
+.. py:class:: TurnoverConstraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    换手约束条件, 继承自 :py:class:`BasePC.Constraint`, 
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 限制类型: str, 可选: "总换手限制", "总买入限制", "总卖出限制", "买卖限制", "买入限制", "卖出限制", 默认值 "总换手限制"
+            * 成交额倍数: 限制成交额占市场成交额的比例乘数, float, 默认值 1.0
+            * 限制上限: 换手约束上限, float, >0, 默认值 0.7
+            * 舍弃优先级: 在优化问题求解失败时调整约束条件的舍弃优先级, float, 默认值 -1, QuantStudio 会在优化问题求解失败时按照优先级从大到小依次舍弃某些约束条件, 直到问题可解, <=-1 表示不可舍弃.
+
+.. py:class:: NonZeroNumConstraint(pc, sys_args={}, config_file=None, **kwargs)
+
+    非零数目约束条件, 继承自 :py:class:`BasePC.Constraint`, 
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 限制上限: 非零数目约束上限, float, >0, 默认值 150
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+            * 舍弃优先级: 在优化问题求解失败时调整约束条件的舍弃优先级, float, 默认值 -1, QuantStudio 会在优化问题求解失败时按照优先级从大到小依次舍弃某些约束条件, 直到问题可解, <=-1 表示不可舍弃.
+
+
+优化目标
+````````
+
+.. py:class:: OptimizationObjective(pc, sys_args={}, config_file=None, **kwargs)
+
+    优化目标基类, 所有的优化目标均继承自此类, 不能实例化对象
+    
+    :param PortfolioConstructor pc: 优化目标所属的组合构造器对象
+    :param dict sys_args: 对象参数
+    :param str config_file: 对象配置文件地址
+
+    .. py:attribute:: Type
+    
+        该约束条件的类型, str
+
+    .. py:attribute:: SupportedContraintType
+    
+        该优化目标可以施加的约束条件类型集合, set
+        
+    .. py:attribute:: Dependency
+    
+        该优化目标的依赖项, dict
+    
+    .. py:method:: genObjective()
+    
+        返回该优化目标的数学形式信息
+        
+        :return: 内部使用的数学形式表达的优化目标
+        :rtype: dict
+
+.. py:class:: MeanVarianceObjective(pc, sys_args={}, config_file=None, **kwargs)
+
+    均值方差目标, 继承自 :py:class:`BasePC.OptimizationObjective`
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+            * 收益项系数: 收益项前面的系数, float, 默认值 0.0
+            * 风险厌恶系数: float, 默认值 1.0
+            * 换手惩罚系数: 换手惩罚项前面的系数, float, 默认值 0.0
+            * 买入惩罚系数: 买入惩罚项前面的系数, float, 默认值 0.0
+            * 卖出惩罚系数: 卖出惩罚项前面的系数, float, 默认值 0.0
+
+.. py:class:: MaxSharpeObjective(pc, sys_args={}, config_file=None, **kwargs)
+
+    最大夏普率目标, 继承自 :py:class:`BasePC.OptimizationObjective`
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 相对基准: 是否减去基准组合的权重, bool, 默认值 False
+
+.. py:class:: RiskBudgetObjective(pc, sys_args={}, config_file=None, **kwargs)
+
+    风险预算目标, 继承自 :py:class:`BasePC.OptimizationObjective`
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 预算因子: 提供预算数据的因子名, str, 默认值 "等权"
+
+.. py:class:: MaxDiversificationObjective(pc, sys_args={}, config_file=None, **kwargs)
+
+    最大分散化目标, 继承自 :py:class:`BasePC.OptimizationObjective`
+
+
+投资组合构造器
+``````````````
+
+.. py:class:: PortfolioConstructor(sys_args={}, config_file=None, **kwargs)
+
+    投资组合构造器基类, 所有的投资组合构造器均继承自此类, 不能实例化对象
+    
+    :param dict sys_args: 对象参数
+    :param str config_file: 对象配置文件地址
+
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 预期收益: Series(index=[ID]) 或 None(默认值), None 表示不需要该数据
+            * 协方差矩阵: DataFrame(index=[ID], columns=[ID]) 或 None(默认值), None 表示不需要该数据
+            * 因子协方差阵: DataFrame(index=[因子名], columns=[因子名]) 或 None(默认值), None 表示不需要该数据
+            * 风险因子: DataFrame(index=[ID], columns=[因子名]) 或 None(默认值), None 表示不需要该数据
+            * 特异性风险: Series(index=[ID]) 或 None(默认值), None 表示不需要该数据
+            * 初始投资组合: Series(权重, index=[ID]) 或 None(默认值), None 表示不需要该数据
+            * 基准投资组合: Series(权重, index=[ID]) 或 None(默认值), None 表示不需要该数据
+            * 成交金额: Series(index=[ID]) 或 None(默认值), None 表示不需要该数据
+            * 因子暴露: DataFrame(index=[ID], columns=[因子名]) 或 None(默认值), None 表示不需要该数据
+            * 总财富: float, >=0
+            * 目标ID: 最终形成的投资组合所属的 ID 序列, list(str)
+            * 优化目标: 优化目标对象, OptimObjective
+            * 约束条件: 约束条件对象列表, list(Constraint)
+            * 优化选项: 优化器的特定参数, dict, 默认值空字典
+            
+    .. py:method:: init()
+    
+        初始化投资组合构造器, 生成依赖信息
+        
+        :return: 依赖信息
+        :rtype: dict
+
+    .. py:method:: solve()
+    
+        求解优化的投资组合
+        
+        :return: (投资组合, 求解信息), 其中投资组合为 Series(权重, index=[ID]), 求解失败为 None; 求解信息是其他一些结果信息, dict
+        :rtype: tuple
+
+
+.. py:module:: MatlabPC
+
+.. py:class:: MatlabPC(matlab_eng=None, lock=None, sys_args={}, config_file=None, **kwargs)
+
+    基于 MATLAB 的投资组合构造器, 继承自 :py:class:`BasePC.PortfolioConstructor`, 没有新的属性和方法
+
+    :param matlab.engine.MatlabEngine matlab_eng: MATLAB Engine for Python 对象
+    :param Lock lock: 如果 matlab_eng 是共享对象, 需要提供资源锁防止冲突, None 表示 matlab_eng 是该构造器专用的
+    :param dict sys_args: 对象参数
+    :param str config_file: 对象配置文件地址
+
+.. py:module:: CVXPC
+
+.. py:class:: CVXPC(sys_args={}, config_file=None, **kwargs)
+
+    基于 CVXPY 模块的投资组合构造器, 继承自 :py:class:`BasePC.PortfolioConstructor`, 没有新的属性和方法

@@ -1,0 +1,282 @@
+﻿.. _绩效分析:
+
+绩效分析
+========
+
+Brinson 模型
+------------
+
+Brinson 和 Falcher(1985年)最早对业绩归因进行研究, 由他们所创建 Brinson 模型将业绩归因为四个部分: 资产配置、个股选择、交互作用和基准收益.
+
+
+单期 Brinson 模型
+`````````````````
+
+当前时刻为 :math:`t`, 考虑时段 :math:`[t-1, t]` 上的业绩归因, 假设在 :math:`t-1` 构建了投资组合, 且在 :math:`[t-1, t]` 之间没有交易.
+
+记:
+
+    * 业绩基准组合里个股 :math:`j` 的权重为 :math:`w^b_j`, 资产 :math:`i` 的权重为 :math:`W^b_i=\sum\limits_{j\in i}w^b_j`;
+    * 实际投资组合里个股 :math:`j` 的权重为 :math:`w^p_j`, 资产 :math:`i` 的权重为 :math:`W^p_i=\sum\limits_{j\in i}w^p_j`;
+    * 个股 :math:`j` 的收益率为 :math:`r_j`.
+
+考虑四个投资组合:
+
+* P1: 业绩基准组合: 其中资产 :math:`i` 的收益率为:
+
+    .. math::
+        R^b_i=\frac{\sum\limits_{j\in i}w^b_jr_j}{W^b_i}
+
+组合收益率:
+
+    .. math::
+        R_{P1} = R_b = \sum\limits_iW^b_iR^b_i=\sum\limits_i\sum\limits_{j\in i}w^b_jr_j
+
+* P2: 主动资产配置组合: 自主选择资产配置的比例, 但是每个资产类别内部则完全按照其业绩基准配置, 即每个资产 :math:`i` 的收益等于在基准中资产 :math:`i` 的收益 :math:`R^b_i`, 而每个资产 `i` 的权重等于在实际组合中资产 :math:`i` 的权重 :math:`W^p_i`, 则其组合收益率:
+
+    .. math::
+        R_{P2} = \sum\limits_iW^p_iR^b_i=\sum\limits_i\frac{W^p_i}{W^b_i}\sum\limits_{j\in i}w^b_jr_j
+
+* P3: 主动股票选择组合: 完全按照业绩基准进行资产类别的配置, 但是每个资产内部能够自主选择个股, 即组合中每个资产 :math:`i` 的权重等于基准中资产 :math:`i` 的权重 :math:`W^b_i`, 每个资产 :math:`i` 的收益等于在实际组合中资产 :math:`i` 的收益 :math:`R^p_i`, 则其组合收益率:
+
+    .. math::
+        R_{P3} = \sum\limits_iW^b_iR^p_i=\sum\limits_i\frac{W^b_i}{W^p_i}\sum\limits_{j\in i}w^p_jr_j
+
+* P4: 实际投资组合: 其中资产 :math:`i` 的收益率为:
+
+    .. math::
+        R^p_i=\frac{\sum\limits_{j\in i}w^p_jr_j}{W^p_i}
+
+组合收益率:
+
+    .. math::
+        R_{P4} = R_p = \sum\limits_iW^p_iR^p_i=\sum\limits_i\sum\limits_{j\in i}w^p_jr_j
+
+
+Brinson 模型将超额收益分解为:
+
+1. 资产配置收益: 由资产配置带来的超额收益, 假设我们能够自主选择决定组合中资产配置的比例, 但是在每一个资产类别内部则完全按照该基准组合配置, 那么该组合的收益率超过基准收益率的部分称为资产配置收益(Return of Asset Allocation):
+
+    .. math::
+        R_{AA} = R_{P2} - R_{P1} = \sum\limits_i(W^p_i-W^b_i)R^b_i
+
+2. 个股选择收益: 由个股选择而带来的超额收益, 假设我们完全按照基准的比例进行资产类别配置, 但是在每一个资产类别内部则能够自主进行个股选择, 那么该组合的收益率超过基准收益率的部分称为个股选择收益(Return of Stock Selection):
+
+    .. math::
+        R_{SS} = R_{P3} - R_{P1} = \sum\limits_iW^b_i(R^p_i-R^b_i)
+
+3. 交互作用收益: 由资产配置和个股选择的交互而带来的超额收益, 投资组合的超额收益不仅来自资产配置收益和个股有选择收益, 还有一部分是由于二者的交互作用所带来的收益, 即所谓的交互作用(Interaction):
+
+    .. math::
+        R_{IN} = R_{P4} - R_{P3} - R_{P2} + R_{P1} = \sum\limits_i(W^p_i-W^b_i)(R^p_i-R^b_i)
+
+则总超额收益为:
+
+    .. math::
+        R_{p-b} = R_{P4} - R_{P1} = R_{AA} + R_{SS} + R_{IN}
+
+而后 Damien Laker 提出资产配置收益的定义可能会带来错误, 故将之修改为:
+
+    .. math::
+        R'_{AA} = R_{AA} - \sum\limits_i(W^p_i-W^b_i)R_b = \sum\limits_i(W^p_i-W^b_i)(R^b_i-R_b)
+
+尽管新定义的加入了基准收益, 但由于权重之和都为 1, 所以更改后的资产配置收益和原结果在总和上是相等的, 即 :math:`R'_{AA}=R_{AA}`. 这两者的差异在于, 原定义强调超额资产配置的收益来源于对收益更高的资产 :math:`i` 的超配, 或对收益低的资产 :math:`j` 的低配; 而新定义强调对表现优于基准总收益的类别 :math:`i` 超配, 或劣于基准总收益的类别 :math:`j` 低配, 这种更符合实际.
+
+
+多期 Brinson 模型
+`````````````````
+
+两个计算时点之间没有调整策略持仓, 则计算每一期的 Brinson 模型, 组合多期总收益即是单期收益的按照复利计算的结果:
+
+    .. math::
+        R_p = (1+R_{p,1})(1+R_{p,2})\cdots(1+R_{p,T}) - 1
+
+其中, :math:`R_{p,t}` 是组合在时段 :math:`[t-1, t]` 上的收益率.
+
+基准总收益为：
+
+    .. math::
+        R_b = (1+R_{b,1})(1+R_{b,2})\cdots(1+R_{b,T}) - 1
+
+其中, :math:`R_{b,t}` 是基准在时段 :math:`[t-1, t]` 上的收益率.
+
+由于复合收益率无法分解为单期收益率的和, 从而考虑对数收益率:
+
+    .. math::
+        \operatorname{log}(1+R_p) - \operatorname{log}(1+R_b) = \sum\limits_{t=1}^{T}\left[\operatorname{log}(1+R_{p,t}) - \operatorname{log}(1+R_{b,t})\right]
+
+对于单期有分解:
+
+    .. math::
+        \operatorname{log}(1+R_{p,t}) - \operatorname{log}(1+R_{b,t}) = k_t(R_{p,t} - R_{b,t}) = k_t(R_{AA,t} + R_{SS,t} + R_{IN,t})
+
+其中,
+
+    .. math::
+        k_t = \frac{\operatorname{log}(1+R_{p,t}) - \operatorname{log}(1+R_{b,t})}{R_{p,t} - R_{b,t}}
+
+从而多期总超额收益有如下分解:
+
+    .. math::
+        \begin{align}
+            R_p - R_b &= \frac{1}{k}(\operatorname{log}(1+R_p) - \operatorname{log}(1+R_b))\operatorname{log}(1+R_{p,t}) \\
+            &= \frac{1}{k}\sum\limits_{t=1}^{T}\left[\operatorname{log}(1+R_{p,t}) - \operatorname{log}(1+R_{b,t})\right] \\
+            &= \frac{1}{k}\sum\limits_{t=1}^{T}k_t(R_{p,t} - R_{b,t}) \\
+            &= \frac{1}{k}\sum\limits_{t=1}^{T}k_t(R_{AA,t} + R_{SS,t} + R_{IN,t}) \\
+            &= R_{AA} + R_{SS} + R_{IN}
+        \end{align}
+
+其中:
+
+    .. math::
+        \begin{align}
+            & k = \frac{\operatorname{log}(1+R_p) - \operatorname{log}(1+R_b)}{R_p - R_b} \\
+            & R_{AA} = \sum\limits_{t=1}^{T}\frac{k_t}{k}R_{AA,t} \\
+            & R_{SS} = \sum\limits_{t=1}^{T}\frac{k_t}{k}R_{SS,t} \\
+            & R_{IN} = \sum\limits_{t=1}^{T}\frac{k_t}{k}R_{IN,t}
+        \end{align}
+
+
+
+基于特征因子模拟组合的绩效分析模型
+----------------------------------
+
+基于投资组合在不同时点上的实际持仓情况，相对于特定因子组合的暴露程度；投资组合业绩相对于因子组合的暴露情况，可能是随着时间变化的；这个方法的优点是：透明度高；缺点是：数据获取的难度极高。因此，该方法比较适用于基金内部的业绩分析。
+
+横截面回归方程：
+
+    .. math::
+        \mathbf{w}=\mathbf{S}\cdot \mathbf{\beta }+\mathbf{u}
+
+其中，:math:`\mathbf{w}=\left( {{w}_{1}},\ldots ,{{w}_{i}},\ldots ,{{w}_{N}} \right)` 为策略在某个时点 :math:`t` 的实际投资组合，如果考虑相对于某个基准的业绩分析，那么 :math:`\mathbf{w}` 为策略的投资组合减去基准的投资组合；对于策略中没有持有的股票，设置其权重为0。
+
+.. math::
+    \mathbf{S}=\left( {{\mathbf{s}}_{1}},\ldots ,{{\mathbf{s}}_{k}},\ldots ,{{\mathbf{s}}_{K}} \right)
+    
+为因子组合构成的矩阵，每一列 :math:`{{\mathbf{s}}_{k}}=\left( {{s}_{1,k}},\ldots ,{{s}_{i,k}},\ldots ,{{s}_{N,k}} \right)` 代表某个特定因子的特征组合，也成为因子模拟组合（Factor Mimicking Portfolio, FMP），表示为在某个特定因子上暴露为1，在其他因子上暴露为0，并且风险最小化的组合；
+
+:math:`\mathbf{\beta }=\left( {{\beta }_{1}},\ldots ,{{\beta }_{k}},\ldots ,{{\beta }_{K}} \right)` 表示策略组合相对于因子模拟组合的暴露水平；
+
+:math:`\mathbf{u}=\left( {{u}_{1}},\ldots ,{{u}_{i}},\ldots ,{{u}_{N}} \right)` 为无法被因子解释的部分，被认为是主动投资管理能力（Alpha）。
+
+通过横截面回归，可以得到 :math:`\mathbf{\beta }` 的计算公式为：
+
+    .. math::
+        \mathbf{\beta }={{\left( \mathbf{{S}'VS} \right)}^{-1}}\mathbf{{S}'Vw}
+
+其中，:math:`\mathbf{V}={{\left( \operatorname{cov}\left( {{\mathbf{r}}_{i}},{{\mathbf{r}}_{j}} \right) \right)}_{N\times N}}` 为通过风险模型计算的股票收益率的协方差矩阵。而因子模拟组合矩阵 :math:`\mathbf{S}` 的计算公式为：
+
+    .. math::
+        \mathbf{S=}{{\left( {{\left( \mathbf{{X}'}{{\mathbf{V}}^{\mathbf{-1}}}\mathbf{X} \right)}^{\mathbf{-1}}}\mathbf{{X}'}{{\mathbf{V}}^{\mathbf{-1}}} \right)}^{\prime }}
+
+其中，:math:`\mathbf{X}=\left( {{\mathbf{x}}_{1}},\ldots ,{{\mathbf{x}}_{k}},\ldots ,{{\mathbf{x}}_{K}} \right)` 为个股的因子暴露矩阵，每一列 :math:`{{\mathbf{x}}_{k}}=\left( {{x}_{1,k}},\ldots ,{{x}_{i,k}},\ldots ,{{x}_{N,k}} \right)` 代表各个股票在特定因子 :math:`k` 上的暴露水平。
+
+基于以上的模型，我们可以得到：
+
+1. 因子暴露：:math:`\mathbf{\beta }`
+2. 风险调整的因子暴露：:math:`\operatorname{diag}\left( \sqrt{\mathbf{{S}'VS}} \right)\cdot \mathbf{\beta }`
+3. 因子对策略组合的风险贡献：:math:`\frac{\sqrt{\mathbf{{S}'Vw}}\cdot \mathbf{\beta }}{\sqrt{\mathbf{{w}'Vw}}}` ，其中，:math:`\sqrt{\mathbf{{S}'Vw}}` 与 :math:`\mathbf{\beta }` 之间的乘法是对应元素分别相乘。
+
+因子对策略组合的收益贡献：:math:`\mathbf{r}\cdot \mathbf{\beta }`，该乘法也是对应元素相乘，其中，:math:`\mathbf{r}=\left( {{r}_{1}},\ldots ,{{r}_{k}},\ldots ,{{r}_{K}} \right)` 为因子模拟组合在时段 :math:`\left[ t-1,t \right]` 上的收益率。
+
+
+
+绩效分析脚本
+------------
+
+.. attention::
+
+    本章节的应用需要一些基本的数据, 参见 :ref:`示例数据<示例数据>` 的配置.
+
+
+一个简单的绩效分析脚本如下::
+
+    # coding=utf-8
+    import datetime as dt
+
+    if __name__=='__main__':
+        import QuantStudio.api as QS
+        
+        HDB = QS.FactorDB.HDF5DB(sys_args={"主目录": "C:\\HDF5Data"})
+        HDB.connect()
+        FT = HDB.getTable("ElementaryFactor")
+        
+        IDs = FT.getID()
+        DTs = FT.getDateTime(start_dt=dt.datetime(2017, 1, 1), end_dt=dt.datetime(2017, 12, 31))
+        DTs = QS.Tools.DateTime.getMonthLastDateTime(DTs)
+        
+        # 创建自定义因子表
+        CFT = QS.FactorDB.CustomFT("CFT")
+        Close, AdjFactor = FT.getFactor("收盘价"), FT.getFactor("复权因子")
+        AdjClose = QS.FactorDB.Factorize(Close * AdjFactor, factor_name="复权收盘价")
+        CFT.addFactors(factor_list=[AdjClose])
+        CFT.addFactors(factor_table=FT, factor_names=["Wind行业"], args={})
+        CFT.addFactors(factor_table=HDB.getTable("IndexConstituentFactor"), factor_names=["中证500成份权重", "中证800成份权重"])
+        CFT.setDateTime(DTs)
+        CFT.setID(IDs)
+        
+        # 创建回测模型
+        Model = QS.BackTest.BackTestModel()
+
+        # 添加回测模块
+        iModule = QS.BackTest.PerformanceAnalysis.BrinsonModel(factor_table=CFT)
+        iModule["策略组合"] = "中证500成份权重"
+        iModule["基准组合"] = "中证800成份权重"
+        iModule["资产类别"] = "Wind行业"
+        iModule["价格因子"] = "复权收盘价"
+        iModule["计算时点"] = DTs
+        Model.Modules.append(iModule)
+        
+        # 运行模型
+        Model.run(dts=DTs)
+        
+        # 查看结果
+        QS.Tools.QtGUI.showOutput(Model.output())
+
+因子库和因子表的创建设置, 模型创建以及运行, 结果展示等代码同 :ref:`因子截面测试脚本` 基本相似, 在 QuantStudio 中, 绩效分析模型定义在 BackTest.PerformanceAnalysis 子模块下, 上述例子中使用了 Brinson 模型, 通过 BrinsonModel 类实例化了模块对象, 然后设置了相关参数, 最后添加到 Model 对象中.
+
+
+API 参考
+--------
+
+.. py:module:: BrinsonModel
+
+.. py:class:: BrinsonModel(factor_table, name="Brinson绩效分析模型", sys_args={}, **kwargs)
+    
+    Brinson 绩效分析模型, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 策略组合: 提供策略权重信息的因子名, str, 必须为 factor_table 因子表中的因子
+            * 基准组合: 提供基准权重信息的因子名, str, 必须为 factor_table 因子表中的因子
+            * 资产类别: 提供 ID 分类信息(比如行业分类)的因子名, str, 必须为 factor_table 因子表中的因子
+            * 价格因子: 提供价格信息的因子名, str, 必须为 factor_table 因子表中的因子
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算
+
+.. py:module:: FMPModel
+
+.. py:class:: FMPModel(factor_table, name="因子模拟组合绩效分析模型", sys_args={}, **kwargs)
+    
+    基于特征因子模拟组合的绩效分析模型, 继承自 :py:class:`BackTestModel.BaseModule`
+    
+    :param FactorTable factor_table: 为该模块提供数据的因子表对象
+    :param str name: 模块名称
+    :param dict sys_args: 对象参数
+    
+    .. py:attribute:: Args
+    
+        参数集:
+        
+            * 策略组合: 提供策略权重信息的因子名, str, 必须为 factor_table 因子表中的因子
+            * 基准组合: 提供基准权重信息的因子名, str, 必须为 factor_table 因子表中的因子
+            * 特征因子: 提供归因特征因子暴露的因子名, [因子], 必须为 factor_table 因子表中的因子
+            * 行业因子: 提供行业分类信息的因子名, str, 必须为 factor_table 因子表中的因子或者 "无" 表示没有行业因子
+            * 价格因子: 提供价格信息的因子名, str, 必须为 factor_table 因子表中的因子
+            * 风险表: 提供风险数据的风险表对象
+            * 计算时点: 功能计算的时点序列, 只在该序列内的时点进行测试, [datetime.datetime], 默认值 [] 表示所有时点均计算

@@ -1,0 +1,68 @@
+﻿风险模型行业分类,Wind一级行业,Wind二级行业,Wind三级行业,Wind三级行业代码
+Energy,能源,能源,能源设备与服务,101010
+Energy,能源,能源,石油、天然气与供消费用燃料,101020
+Chemicals,材料,材料,化工,151010
+Construction Materials,材料,材料,建材Ⅲ,151020
+Diversified Metals,材料,材料,金属、非金属与采矿,151040
+Materials,材料,材料,容器与包装,151030
+Materials,材料,材料,纸与林木产品,151050
+Aerospace and Defense,工业,资本货物,航空航天与国防Ⅲ,201010
+Building Products,工业,资本货物,建筑产品Ⅲ,201020
+Construction and Engineering,工业,资本货物,建筑与工程Ⅲ,201030
+Electrical Equipment,工业,资本货物,电气设备,201040
+Industrial Conglomerates,工业,资本货物,综合类Ⅲ,201050
+Industrial Machinery,工业,资本货物,机械,201060
+Trading Companies and Distributors,工业,资本货物,贸易公司与工业品经销商Ⅲ,201070
+Commercial and Professional Services,工业,商业服务与用品,商业服务与用品,202010
+Commercial and Professional Services,工业,商业服务与用品,专业服务,202020
+Airlines,工业,运输,航空货运与物流Ⅲ,203010
+Airlines,工业,运输,航空Ⅲ,203020
+Marine,工业,运输,海运Ⅲ,203030
+Road Rail and Transportation Infrastructure,工业,运输,公路与铁路运输,203040
+Road Rail and Transportation Infrastructure,工业,运输,交通基础设施,203050
+Automobiles and Components,可选消费,汽车与汽车零部件,汽车零配件,251010
+Automobiles and Components,可选消费,汽车与汽车零部件,汽车,251020
+Household Durables (non-Homebuilding),可选消费,耐用消费品与服装,家庭耐用消费品,252010
+Leisure Products Textiles Apparel and Luxury,可选消费,耐用消费品与服装,休闲设备与用品,252020
+Leisure Products Textiles Apparel and Luxury,可选消费,耐用消费品与服装,纺织品、服装与奢侈品,252030
+Hotels Restaurants and Leisure,可选消费,酒店、餐馆与休闲,酒店、餐馆与休闲Ⅲ,253010
+Hotels Restaurants and Leisure,可选消费,酒店、餐馆与休闲,综合消费者服务Ⅲ,253020
+Media,可选消费,媒体,媒体Ⅲ,254010
+Retail,可选消费,零售业,消费品经销商Ⅲ,255010
+Retail,可选消费,零售业,互联网与售货目录零售,255020
+Retail,可选消费,零售业,多元化零售,255030
+Retail,可选消费,零售业,专营零售,255040
+Food Staples Retail Household Personal Prod,日常消费,食品与主要用品零售,食品与主要用品零售Ⅲ,301010
+Food Staples Retail Household Personal Prod,日常消费,家庭与个人用品,家庭用品Ⅲ,303010
+Food Staples Retail Household Personal Prod,日常消费,家庭与个人用品,个人用品Ⅲ,303020
+Beverages,日常消费,食品、饮料与烟草,饮料,302010
+Food Products,日常消费,食品、饮料与烟草,食品,302020
+Food Products,日常消费,食品、饮料与烟草,烟草,302030
+Health,医疗保健,医疗保健设备与服务,医疗保健设备与用品,351010
+Health,医疗保健,医疗保健设备与服务,医疗保健提供商与服务,351020
+Health,医疗保健,医疗保健设备与服务,医疗保健技术Ⅲ,351030
+Health,医疗保健,制药与生物科技,生物科技Ⅲ,352010
+Health,医疗保健,制药与生物科技,制药,352020
+Health,医疗保健,制药与生物科技,生命科学工具和服务Ⅲ,352030
+Banks,金融,银行,商业银行,401010
+Banks,金融,银行,互助储蓄银行与抵押信贷,401020
+Diversified Financial Services,金融,多元金融,多元金融服务,402010
+Diversified Financial Services,金融,多元金融,消费信贷,402020
+Diversified Financial Services,金融,多元金融,资本市场,402030
+Diversified Financial Services,金融,保险,保险Ⅲ,403010
+Real Estate,金融,房地产,房地产管理与开发,404010
+Software,信息技术,软件与服务,互联网软件与服务Ⅲ,451010
+Software,信息技术,软件与服务,信息技术服务,451020
+Software,信息技术,软件与服务,软件,451030
+Hardware and Semiconductors,信息技术,技术硬件与设备,通信设备Ⅲ,452010
+Hardware and Semiconductors,信息技术,技术硬件与设备,电脑与外围设备,452020
+Hardware and Semiconductors,信息技术,技术硬件与设备,电子设备、仪器和元件,452030
+Hardware and Semiconductors,信息技术,技术硬件与设备,办公电子设备,452040
+Hardware and Semiconductors,信息技术,半导体与半导体生产设备,半导体产品与半导体设备,453010
+Hardware and Semiconductors,电信服务,电信服务,多元电信服务,501010
+Hardware and Semiconductors,电信服务,电信服务,无线电信业务Ⅲ,501020
+Utilities,公用事业,公用事业,电力Ⅲ,551010
+Utilities,公用事业,公用事业,燃气Ⅲ,551020
+Utilities,公用事业,公用事业,复合型公用事业Ⅲ,551030
+Utilities,公用事业,公用事业,水务Ⅲ,551040
+Utilities,公用事业,公用事业,独立电力生产商与能源贸易商Ⅲ,551050
