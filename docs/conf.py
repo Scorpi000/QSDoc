@@ -33,6 +33,7 @@
 extensions = [
     'sphinx.ext.mathjax'
 ]
+# mathjax_path = "../../../MathJax-master/es5/tex-chtml.js"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
